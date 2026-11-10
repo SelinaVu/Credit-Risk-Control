@@ -1,0 +1,508 @@
+=== Row 0 ===
+Category: Chỉ tiêu
+Variable Name: Tên biến
+Formula: Công thức / Cách tính
+Explanation: Diễn giải
+Threshold: Điều kiện / Ngưỡng cảnh báo
+Ref: Ghi chú / Tài liệu tham khảo (link doi)
+Pros: Ưu điểm khi áp dụng tại Việt Nam
+Cons: Nhược điểm / Hạn chế khi áp dụng tại Việt Nam
+
+=== Row 1 ===
+Category: nan
+Variable Name: nan
+Formula: nan
+Explanation: nan
+Threshold: nan
+Ref: nan
+Pros: nan
+Cons: nan
+
+=== Row 2 ===
+Category: Earning
+Manipulation
+Variable Name: Abnormal CFO
+(Ab_CFO)
+Formula: Bước 1 - Ước lượng CFO bình thường bằng hồi quy chéo ngành-năm:
+CFO_t/A_{t-1} = α₀(1/A_{t-1}) + α₁(S_t/A_{t-1}) + β₁(ΔS_t/A_{t-1}) + ε_t
+
+Bước 2 - Tính phần dư bất thường:
+Ab_CFO = CFO_t/A_{t-1} - Giá trị ước lượng từ mô hình
+Explanation: Phản ánh dấu hiệu DN tăng doanh thu giả qua chiết khấu giá hoặc nới lỏng tín dụng thương mại → dòng tiền thực thu thấp hơn mức bình thường so với doanh thu.
+
+CFO_t: Dòng tiền thuần từ HĐKD kỳ t (LCTT)
+A_{t-1}: Tổng tài sản đầu kỳ (CĐKT)
+S_t: Doanh thu thuần kỳ t (KQKD)
+ΔS_t = S_t - S_{t-1} (KQKD)
+Threshold: Dấu hiệu cảnh báo:
+• Ab_CFO âm → dòng tiền thấp bất thường → nghi DN bán hàng chiết khấu mạnh / channel stuffing
+
+Điều kiện áp dụng:
+• Cần ≥15 quan sát cùng ngành-năm để hồi quy có ý nghĩa
+• Cần ≥3 năm BCTC liên tiếp
+• Tất cả biến chuẩn hóa chia cho A_{t-1}
+• Loại trừ: ngân hàng, TC, BH (SIC 6000-6500); tiện ích (SIC 4400-5000)
+Ref: Roychowdhury (2006)
+https://doi.org/10.1016/j.jacceco.2006.01.002
+Pros: • Phát hiện thao túng không vi phạm chuẩn mực kế toán → kiểm toán VN thường bỏ qua
+• Dựa trên LCTT → khó bị làm đẹp hơn KQKD
+• Kết hợp 3 biến REM cho tín hiệu mạnh và đáng tin cậy hơn
+• Không bị ảnh hưởng bởi chính sách kế toán (LIFO/FIFO, khấu hao)
+Cons: • Cần ≥15 quan sát cùng ngành-năm → nhiều ngành VN không đủ mẫu
+• LCTT VN lập theo pp gián tiếp → CFO dễ bị làm đẹp, gây nhiễu Ab_CFO
+• Cần ≥3 năm BCTC liên tiếp → DN mới hoặc đổi ngành không áp dụng được
+• Hệ số α, β ước lượng từ mẫu US → phải tái ước lượng trên dữ liệu VN
+
+=== Row 3 ===
+Category: nan
+Variable Name: Abnormal PROD
+(Ab_PROD)
+Formula: Bước 1 - Xác định PROD:
+PROD_t = COGS_t + ΔINV_t
+(COGS_t: Giá vốn kỳ t; ΔINV_t = INV_t - INV_{t-1})
+
+Bước 2 - Ước lượng PROD bình thường bằng hồi quy chéo ngành-năm:
+PROD_t/A_{t-1} = α₀(1/A_{t-1}) + α₁(S_t/A_{t-1}) + β₁(ΔS_t/A_{t-1}) + β₂(ΔS_{t-1}/A_{t-1}) + ε_t
+
+Bước 3 - Tính phần dư bất thường:
+Ab_PROD = PROD_t/A_{t-1} - Giá trị ước lượng từ mô hình
+Explanation: Phản ánh dấu hiệu sản xuất vượt mức cần thiết (overproduction) để phân bổ chi phí cố định cho nhiều đơn vị hơn → giảm COGS → tăng biên LN báo cáo.
+
+COGS_t: Giá vốn hàng bán kỳ t (KQKD)
+INV_t: Hàng tồn kho cuối kỳ t (CĐKT)
+Threshold: Dấu hiệu cảnh báo:
+• Ab_PROD dương → chi phí SX cao bất thường → nghi overproduction
+
+Điều kiện áp dụng:
+• Chủ yếu có ý nghĩa với DN sản xuất (manufacturing)
+• Ưu điểm: không bị ảnh hưởng bởi LIFO/FIFO, không bị bóp méo bởi accrual manipulation trên HTK
+• Cùng yêu cầu mẫu như Ab_CFO
+Ref: Roychowdhury (2006)
+https://doi.org/10.1016/j.jacceco.2006.01.002
+Pros: • Không bị bóp méo bởi accrual manipulation trên hàng tồn kho
+• Không bị ảnh hưởng bởi LIFO/FIFO (VN dùng FIFO/bình quân)
+• Phát hiện overproduction - hành vi phổ biến trước mùa vay vốn tại DN SX VN
+Cons: • Chỉ có ý nghĩa với DN sản xuất → loại trừ phần lớn DN thương mại, dịch vụ
+• Tồn kho VN đôi khi ghi nhận không nhất quán giữa các kỳ → ΔINV bị nhiễu
+• Cần cùng yêu cầu mẫu ngành-năm như Ab_CFO
+• Hệ số phải tái ước lượng trên dữ liệu VN
+
+=== Row 4 ===
+Category: nan
+Variable Name: Abnormal DISEXP
+(Ab_DISEXP)
+Formula: Bước 1 - Xác định DISEXP:
+DISEXP_t = R&D_t + Advertising_t + SG&A_t
+(Nếu thiếu R&D hoặc Advertising → đặt = 0)
+
+Bước 2 - Ước lượng DISEXP bình thường:
+DISEXP_t/A_{t-1} = α₀(1/A_{t-1}) + β₁(S_{t-1}/A_{t-1}) + ε_t
+(Dùng S_{t-1} thay vì S_t để tránh bias khi DT bị thao túng)
+
+Bước 3 - Tính phần dư bất thường:
+Ab_DISEXP = DISEXP_t/A_{t-1} - Giá trị ước lượng từ mô hình
+Explanation: Phản ánh dấu hiệu DN cắt giảm chi phí tùy quyết (R&D, quảng cáo, SG&A) để tăng LN báo cáo ngắn hạn, gây tổn hại dài hạn.
+
+SG&A_t: Chi phí bán hàng & QLDN (KQKD)
+R&D_t: Chi phí nghiên cứu & phát triển (KQKD/TM)
+Advertising_t: Chi phí quảng cáo (KQKD/TM)
+Threshold: Dấu hiệu cảnh báo:
+• Ab_DISEXP âm → chi phí tùy quyết thấp bất thường → nghi cắt giảm chi phí để đẩy LN
+
+🚨 RED FLAG tổng hợp:
+Ab_CFO âm + Ab_PROD dương + Ab_DISEXP âm → DN có thể đang 'làm đẹp' BCTC trước khi nộp hồ sơ vay
+
+Điều kiện áp dụng:
+• Cùng yêu cầu mẫu như Ab_CFO
+• Lý do dùng S_{t-1}: nếu DN thao túng DT lên, dùng S_t sẽ tạo phần dư âm giả mạo
+Ref: Roychowdhury (2006)
+https://doi.org/10.1016/j.jacceco.2006.01.002
+Pros: • Phát hiện cắt giảm R&D/quảng cáo để đẩy LN ngắn hạn - phổ biến tại DN VN trước IPO/vay vốn lớn
+• Dùng S_{t-1} thay vì S_t → tránh bias khi doanh thu bị thao túng
+• Kết hợp với Ab_CFO và Ab_PROD tạo RED FLAG mạnh
+Cons: • R&D và Advertising hầu như không công bố tách biệt trong BCTC VN → chủ yếu chỉ đo được SG&A, mất 2/3 thông tin
+• SG&A tại VN thường bị phân loại không nhất quán giữa DN và ngành
+• Hệ số phải tái ước lượng trên dữ liệu VN
+• Cần cùng yêu cầu mẫu ngành-năm
+
+=== Row 5 ===
+Category: nan
+Variable Name: nan
+Formula: nan
+Explanation: nan
+Threshold: nan
+Ref: nan
+Pros: nan
+Cons: nan
+
+=== Row 6 ===
+Category: Financial
+Constraints
+Variable Name: KZ Index
+(Kaplan-Zingales Index)
+Formula: KZ = -1.002×(CF/K_{t-1}) + 0.283×Q + 3.139×(Debt/K_{t-1})
+       - 39.368×(Div/K_{t-1}) - 1.315×(Cash/K_{t-1})
+
+Trong đó:
+• CF/K_{t-1} = (Lợi nhuận sau thuế + Khấu hao) / Net PPE đầu kỳ
+• Q = Tobin's Q = (Vốn hóa TT + Nợ) / Tổng TS
+• Debt/K_{t-1} = Tổng nợ / Net PPE đầu kỳ
+• Div/K_{t-1} = Cổ tức tiền mặt / Net PPE đầu kỳ
+• Cash/K_{t-1} = Tiền & TĐTT / Net PPE đầu kỳ
+• K_{t-1} = Net PPE năm t-1 (nếu thiếu → dùng Total Assets)
+
+Hệ số lấy từ kết quả Ordered Logit của Kaplan & Zingales (1997).
+Công thức cụ thể theo Lamont et al. (2001).
+Explanation: Đo lường mức độ hạn chế tài chính tổng hợp từ 5 chiều: dòng tiền, cơ hội đầu tư, đòn bẩy, cổ tức và dự trữ tiền mặt.
+
+KZ cao → DN bị ràng buộc tài chính nhiều → khó tiếp cận vốn bên ngoài.
+Threshold: Ngưỡng phân loại (tương đối, theo năm):
+• Top 33% KZ cao nhất → Constrained
+• Bottom 33% KZ thấp nhất → Unconstrained
+• Middle 33% → Trung lập
+
+Điều kiện áp dụng:
+• DN sản xuất (SIC 2000-3999), có tăng trưởng DT dương năm trước
+• Loại trừ TC, ngân hàng, tiện ích
+• Cần panel data nhiều năm; ưu tiên DN niêm yết (cần MV cho Q)
+
+Lưu ý VN:
+• Nếu thiếu Q → thay bằng Book-to-Market hoặc bỏ biến Q
+• Phân loại theo top 30-40% trong ngành thay vì toàn thị trường
+• Không dùng KZ là chỉ số duy nhất; kết hợp WW, SA, ICR, OCF/Debt
+Ref: Kaplan & Zingales (1997)
+https://doi.org/10.1162/003355397555163
+
+Lamont et al. (2001)
+https://doi.org/10.1093/rfs/14.2.529
+Pros: • Đa chiều, tổng hợp 5 yếu tố → bao quát hơn SA Index
+• Nền tảng lý thuyết vững từ Ordered Logit (K&Z 1997)
+• Được kiểm chứng rộng rãi trong nghiên cứu học thuật quốc tế
+Cons: • Tobin's Q đòi hỏi giá thị trường CP → chỉ áp dụng DN niêm yết (thiểu số tại VN)
+• Hệ số ước lượng trên mẫu DN SX Mỹ thập niên 1990 → lệch lớn khi áp dụng VN
+• Nợ cao + dòng tiền thấp tại VN có thể do đặc thù ngành hoặc tín dụng chính sách → KZ cao không nhất thiết là bị ràng buộc TC
+• Nhiều DN VN trả cổ tức bằng cổ phiếu → biến Div/K bị méo
+• Dễ nhầm lẫn KZ cao với financial distress (bản chất khác)
+⚠️ Kém tin cậy nhất trong 3 index. Không dùng độc lập tại VN
+
+=== Row 7 ===
+Category: Financial
+Constraints
+Variable Name: WW Index
+(Whited-Wu Index)
+Formula: WW = -0.091×CF - 0.062×DIVPOS + 0.021×TLTD
+       - 0.044×LNTA + 0.102×ISG - 0.035×SG
+
+Trong đó:
+• CF = (Lợi nhuận sau thuế + Khấu hao) / Tổng TS
+• DIVPOS = 1 nếu DN trả cổ tức tiền mặt; 0 nếu không
+• TLTD = Tổng nợ dài hạn / Tổng TS
+• LNTA = ln(Tổng TS)
+• ISG = Tăng trưởng doanh thu của ngành (trung bình ngành)
+• SG = Tăng trưởng doanh thu của DN = (DT_t - DT_{t-1})/DT_{t-1}
+Explanation: Index tổng hợp đo ràng buộc tài chính theo 6 chiều, được xây dựng để tránh vấn đề nội sinh của Tobin's Q trong KZ Index.
+
+WW cao → DN bị ràng buộc tài chính nhiều hơn.
+Threshold: Ngưỡng phân loại:
+• Phân nhóm theo tercile (33%) của WW trong mẫu mỗi năm
+• Top 33% WW cao nhất → Constrained
+• Bottom 33% WW thấp nhất → Unconstrained
+
+Điều kiện áp dụng:
+• Cần dữ liệu tăng trưởng ngành (ISG) → đòi hỏi mẫu đủ lớn
+• Loại trừ TC, ngân hàng, tiện ích
+• Phù hợp hơn KZ khi không có dữ liệu thị trường chứng khoán
+• Phát triển bởi Chen et al. (2021) cho bối cảnh cross-listing
+Ref: Whited & Wu (2006)
+https://doi.org/10.1093/rfs/hhj012
+
+Chen et al. (2021)
+https://doi.org/10.1016/j.intfin.2021.101290
+Pros: • Không cần Tobin's Q → không cần dữ liệu thị trường chứng khoán
+• Phù hợp hơn KZ cho DN chưa niêm yết tại VN
+• Tích hợp tăng trưởng ngành (ISG) → xét đến bối cảnh vĩ mô
+• Chen et al. (2021) đã áp dụng cho bối cảnh quốc tế
+Cons: • ISG đòi hỏi dữ liệu trung bình ngành theo từng năm → rất khó thu thập tại VN
+• Hệ số ước lượng trên mẫu DN Mỹ → cần tái ước lượng cho VN
+• TLTD (nợ dài hạn/tổng TS): DN VN thường vay ngắn hạn rollover → đánh giá sai mức độ ràng buộc
+• Biến DIVPOS gặp vấn đề tương tự KZ tại VN
+
+=== Row 8 ===
+Category: Financial
+Constraints
+Variable Name: SA Index
+(Size-Age Index)
+Formula: SA = -0.737×Size + 0.043×Size² - 0.040×Age
+
+Trong đó:
+• Size = ln(Tổng tài sản) [được cap ở ln(4.5 tỷ USD)]
+• Age = Số năm DN đã niêm yết [được cap ở 37 năm]
+• Tổng tài sản tính bằng triệu USD (hoặc quy đổi tương đương)
+
+Không dùng dividend, dòng tiền hay biến thị trường → ít nội sinh hơn.
+Explanation: Proxy ràng buộc tài chính chỉ dựa trên quy mô và tuổi DN.
+
+SA càng cao (ít âm / gần 0) → DN càng bị ràng buộc tài chính nhiều.
+
+Lý luận: DN nhỏ và trẻ khó tiếp cận vốn bên ngoài hơn DN lớn và lâu đời.
+Threshold: Ngưỡng phân loại:
+• Phân nhóm theo tercile (33%) của SA trong mẫu
+• Top 33% SA cao nhất (gần 0 nhất) → Constrained
+• Bottom 33% SA thấp nhất (âm nhiều nhất) → Unconstrained
+
+Điều kiện áp dụng:
+• Phù hợp nhất với DN Việt Nam và thị trường mới nổi (không cần dữ liệu thị trường)
+• Cần dữ liệu: Tổng tài sản + Năm thành lập / năm niêm yết
+• Loại trừ TC, ngân hàng, tiện ích
+• Hadlock & Pierce (2010) chứng minh SA vượt trội so với KZ trong thực tế
+Ref: Hadlock & Pierce (2010)
+https://doi.org/10.1093/rfs/hhq009
+Pros: • Chỉ cần 2 biến: Tổng TS + Tuổi DN → dễ thu thập nhất, kể cả DN tư nhân
+• Ít nội sinh nhất trong 3 index (không dùng dividend, dòng tiền, biến TT)
+• Hadlock & Pierce (2010) chứng minh SA vượt trội KZ
+• Nhiều nghiên cứu VN đã áp dụng thành công
+• Dễ tự động hóa trong hệ thống tín dụng
+✅ Proxy tốt nhất để bắt đầu tại VN
+Cons: • Chỉ 2 chiều → bỏ qua dòng tiền, cơ cấu nợ, hiệu quả hoạt động
+• DN nhà nước lớn tuổi → SA thấp nhưng thực tế kém hiệu quả → bị lệch bởi bảo lãnh ngầm Nhà nước
+• 'Tuổi' tại VN tính từ năm thành lập (khác bài gốc dùng năm niêm yết) → cần thống nhất
+• Hệ số từ dữ liệu Mỹ → giá trị tuyệt đối khác nhưng xếp hạng tương đối vẫn có giá trị
+• Nên kết hợp thêm ICR hoặc OCF/Debt để tăng độ tin cậy
+
+=== Row 9 ===
+Category: nan
+Variable Name: nan
+Formula: nan
+Explanation: nan
+Threshold: nan
+Ref: nan
+Pros: nan
+Cons: nan
+
+=== Row 10 ===
+Category: Financial
+Distress
+Variable Name: Altman Z-Score
+(Mô hình MDA dự báo phá sản)
+
+thường cho DN sx
+
+loại tchinh
+Formula: Z = 0.012×X₁ + 0.014×X₂ + 0.033×X₃ + 0.006×X₄ + 0.999×X₅
+
+Các biến:
+• X₁ = Vốn lưu động / Tổng tài sản
+  = (TSNH - Nợ NH) / Tổng TS (CĐKT)
+• X₂ = Lợi nhuận giữ lại / Tổng tài sản
+  = LNGL tích lũy / Tổng TS (CĐKT)
+• X₃ = EBIT / Tổng tài sản
+  = (LN trước thuế + Chi phí lãi vay) / Tổng TS (KQKD + CĐKT)
+• X₄ = Giá trị TT VCSH / Giá trị sổ sách Tổng nợ
+  = Vốn hóa thị trường / Tổng nợ phải trả (Sàn CK + CĐKT)
+• X₅ = Doanh thu / Tổng tài sản
+  = Doanh thu thuần / Tổng TS (KQKD + CĐKT)
+Explanation: Mô hình phân tích biệt số đa biến (MDA) kết hợp 5 chỉ số tài chính để dự báo khả năng phá sản trong vòng 1-2 năm.
+
+X₁: Đo tài sản thanh khoản ròng
+X₂: Đo khả năng sinh lời tích lũy
+X₃: Đo năng suất thực tế của tài sản
+X₄: Đo khả năng chịu đựng sụt giảm giá trị tài sản
+X₅: Đo khả năng tạo doanh thu từ tài sản
+Threshold: Ngưỡng phân loại:
+• Z > 2.99 → Vùng an toàn (Non-bankrupt)
+• 1.81 < Z < 2.99 → Vùng xám (Zone of ignorance) - cần thận trọng
+• Z < 1.81 → Vùng nguy hiểm (Bankrupt) - nguy cơ phá sản cao
+• Điểm cắt tối ưu thực tế: 2.675
+
+Điều kiện áp dụng:
+• DN sản xuất, cổ phần đại chúng niêm yết
+• Quy mô TS gốc: 0.7-25.9 triệu USD
+• Độ chính xác cao nhất khi dự báo trước 1 năm (95%); vẫn tốt trước 2 năm
+• Cần dữ liệu giá cổ phiếu cho X₄
+• Biến thể Z' (cho DN tư nhân): thay X₄ = VCSH sổ sách / Tổng nợ
+Ref: Altman (1968)
+https://doi.org/10.1111/j.1540-6261.1968.tb00843.x
+Pros: • Đơn giản, dễ tính, dễ giải thích cho cán bộ tín dụng không chuyên
+• Biến thể Z' (giá trị sổ sách) áp dụng được cho DN chưa niêm yết tại VN
+• Nhiều nghiên cứu VN đã tái ước lượng → có ngưỡng tham chiếu điều chỉnh
+• Tổng hợp 5 chiều tài chính → toàn diện hơn từng tỷ số riêng lẻ
+• Độ chính xác cao nhất khi dự báo trước 1 năm
+Cons: • X₄ (vốn hóa TT / tổng nợ): TTCK VN kém hiệu quả → X₄ méo, đặc biệt CP nhỏ và ít thanh khoản
+• Ngưỡng gốc 1.81/2.99 từ mẫu Mỹ 1960s → phải điều chỉnh cho VN
+• Ngành BĐS, xây dựng, thép VN có đòn bẩy cao cơ cấu → Z-Score thấp mang tính hệ thống, không nhất thiết là nguy cơ phá sản thực
+• Khái niệm 'phá sản' theo Luật VN 2014 khác với Mỹ → mô hình không tương đương hoàn toàn
+• Lợi nhuận giữ lại (X₂) thấp do phân phối cổ tức nhiều → Z-Score bị kéo xuống giả tạo
+⚠️ Bắt buộc tái ước lượng ngưỡng trên dữ liệu VN trước khi dùng
+
+=== Row 11 ===
+Category: nan
+Variable Name: nan
+Formula: nan
+Explanation: nan
+Threshold: nan
+Ref: nan
+Pros: nan
+Cons: nan
+
+=== Row 12 ===
+Category: FS
+Manipulation
+Variable Name: Beneish M-Score
+(Phiên bản gốc 1997 - 12 biến, Probit)
+Formula: Mô hình Probit: M_i = β'X_i + ε_i → P_i = Φ(β'X_i)
+
+7 Biến tài chính (dấu vết thao túng):
+• DSRI = (Rec_t/Sales_t) / (Rec_{t-1}/Sales_{t-1})
+• GMI = GrossMargin_{t-1} / GrossMargin_t
+• AQI = [1-(CA_t+PPE_t)/TA_t] / [1-(CA_{t-1}+PPE_{t-1})/TA_{t-1}]
+• DEPI = DepRate_{t-1} / DepRate_t
+• SGAI = (SGA_t/Sales_t) / (SGA_{t-1}/Sales_{t-1})
+• SGI = Sales_t / Sales_{t-1}
+• TATA = Total Accruals_t / Total Assets_t
+
+5 Biến động cơ (bối cảnh):
+• Leverage change, Abnormal return, Positive accruals dummy,
+  Declining cash sales dummy, Issued securities dummy
+
+Output: P_i ∈ [0,1] = Xác suất DN vi phạm GAAP
+Explanation: Mô hình probit phân biệt DN vi phạm GAAP với DN có accruals lớn nhưng chưa vi phạm.
+
+Mục tiêu: phát hiện khả năng thao túng BCTC dựa trên 12 dấu vết tài chính và động cơ gian lận.
+Threshold: Ngưỡng khuyến nghị (tỷ lệ C_I:C_II):
+• P_i > 0.0675 → 🔴 Cảnh báo đỏ (cut-off 20:1) - Mức mặc định
+• 0.03 < P_i ≤ 0.0675 → 🟡 Cảnh báo vàng
+• P_i ≤ 0.03 → 🟢 Thấp rủi ro
+• P_i > 0.0287 → 🔴 Cực kỳ thận trọng (cut-off 30:1 / 40:1)
+
+Điều kiện áp dụng:
+• DN phải có accruals cao (top decile theo Modified Jones) hoặc DT tăng trưởng bất thường
+• Ưu tiên khoản vay lớn, DN niêm yết, đòn bẩy cao
+• Cần ≥2 năm BCTC đã kiểm toán
+• Cần cập nhật hệ số β định kỳ 3-5 năm/lần
+• Type I Error (bỏ sót kẻ gian) tốn kém hơn Type II Error
+Ref: Beneish (1997)
+https://doi.org/10.1016/S0278-4254(97)00023-9
+Pros: • Đầy đủ nhất, tích hợp cả dấu vết thao túng và động cơ gian lận
+• Output là xác suất → linh hoạt điều chỉnh cut-off theo khẩu vị rủi ro của ngân hàng
+• Phân biệt rõ Type I / Type II Error → phù hợp phân tích tín dụng học thuật
+Cons: • 5 biến động cơ đòi hỏi dữ liệu thị trường → không khả thi với DN chưa niêm yết tại VN
+• Hệ số β ước lượng trên mẫu DN Mỹ vi phạm GAAP → phải tái ước lượng hoàn toàn trên mẫu VAS
+• Định nghĩa vi phạm GAAP (Mỹ) khác VAS (VN) → mẫu training rất khó xây dựng tại VN
+• Rất khó tự động hóa do nhiều biến khó thu thập
+⚠️ Chủ yếu giá trị học thuật. Không phù hợp triển khai trực tiếp trong app tín dụng VN
+
+=== Row 13 ===
+Category: FS
+Manipulation
+Variable Name: Beneish M-Score
+(Phiên bản phát triển 1999 - 8 biến, dễ áp dụng)
+Formula: M = -4.84 + 0.920×DSRI + 0.528×GMI + 0.404×AQI
+      + 0.892×SGI + 0.115×DEPI - 0.172×SGAI
+      + 4.679×TATA - 0.327×LVGI
+
+8 biến (bỏ 4 biến động cơ khó thu thập):
+• DSRI = (Rec_t/Sales_t) / (Rec_{t-1}/Sales_{t-1})
+• GMI = GrossMargin_{t-1} / GrossMargin_t
+• AQI = [1-(CA_t+PPE_t)/TA_t] / [1-(CA_{t-1}+PPE_{t-1})/TA_{t-1}]
+• SGI = Sales_t / Sales_{t-1}
+• DEPI = DepRate_{t-1} / DepRate_t
+• SGAI = (SGA_t/Sales_t) / (SGA_{t-1}/Sales_{t-1})
+• TATA = (ΔCA - ΔCash - ΔCL + ΔSTDebt - Dep) / TA_t
+• LVGI = (LTD_t + CL_t) / TA_t / [(LTD_{t-1} + CL_{t-1}) / TA_{t-1}]
+
+Output: M (continuous score)
+Explanation: Phiên bản gọn hơn, được gọi là Beneish M-Score, dễ áp dụng cho nhà đầu tư và chuyên gia phân tích.
+
+Sử dụng 8 biến tài chính để ước lượng xác suất thao túng lợi nhuận (earnings manipulation - vi phạm GAAP để thổi phồng lợi nhuận).
+Threshold: Ngưỡng phân loại:
+• M > -1.78 → 🔴 Nghi ngờ thao túng lợi nhuận
+• M < -2.22 → 🟢 Ít có khả năng thao túng
+• -2.22 ≤ M ≤ -1.78 → 🟡 Vùng xám
+
+Điều kiện áp dụng:
+• Cần ≥2 năm BCTC liên tiếp
+• Nếu thiếu dữ liệu khấu hao vô hình / SGA → đặt DEPI=1, SGAI=1
+• Phù hợp với DN phi tài chính
+• Dễ tự động hóa hơn phiên bản 1997
+• Nên kết hợp với phân tích dòng tiền thực tế và kiểm tra hiện trường
+
+Lưu ý: TATA dương và lớn liên tục là dấu hiệu nguy hiểm nhất
+Ref: Beneish (1999)
+https://doi.org/10.2469/faj.v55.n5.2296
+Pros: • Chỉ cần dữ liệu BCTC thuần túy → khả thi nhất để triển khai tại VN
+• Ngưỡng -1.78/-2.22 được nhiều nghiên cứu quốc tế và VN kiểm chứng
+• Dễ tự động hóa, không cần dữ liệu thị trường chứng khoán
+• DSRI đặc biệt nhạy với thực trạng VN: DN ghi nhận DT sớm, giảm trích lập nợ xấu phải thu trước khi vay vốn
+✅ Phiên bản thực tế nhất để triển khai tại VN
+Cons: • TATA đòi hỏi BCTC đầy đủ và nhất quán → nhiều DN VN có BCTC thiếu nhất quán giữa các năm
+• SGAI: SG&A tại VN thường bị phân loại không đồng nhất giữa DN và ngành
+• Ngưỡng -1.78 từ mẫu Mỹ → nghiên cứu VN gợi ý điều chỉnh về -2.0 đến -1.5
+• Cần ≥2 năm BCTC liên tiếp, chất lượng BCTC phải đủ tin cậy
+• Không phát hiện được thao túng qua nghiệp vụ ngoại bảng (off-balance sheet) phổ biến tại VN
+
+=== Row 14 ===
+Category: FS
+Manipulation
+Variable Name: Dechow F-Score
+Formula: Bước 1 - Tính Predicted Value (Giá trị dự báo):
+Predicted Value = −7.893 + 0.790×rsst_acc + 2.518×ch_rec + 
+1.191×ch_inv + 1.979×soft_assets + 0.171×ch_cs − 
+0.932×ch_roa + 1.029×issue
+
+Trong đó: 
+• rsst_acc = RSST accruals=(ΔWC + ΔNCO + ΔFIN) / Average total assets. 
+WC = (CA – Cash – STInv) – (CL – STDebt); NCO = (TA – CA – Invest) – 
+(TL – CL – LTD); FIN = (STInv + LTInvest) – (LTD + STDebt + PrefStock)
+• ch_rec = Change in receivables = ΔAccounts Receivable / Average TA
+• ch_inv = Change in inventory = ΔInventory / Average TA
+• soft_assets = % Soft assets = (TA – PP&E – Cash and Cash Equivalent) / TA
+• ch_cs = % change in cash sales. Cash sales = Sales – ΔAR
+• ch_roa = Change in ROA = ROA_t – ROA_{t-1}
+• issue = Actual issuance = 1 nếu công ty phát hành chứng khoán 
+(cổ phiếu/nợ dài hạn) trong năm t; = 0 nếu ngược lại
+
+Bước 2 - Chuyển đổi thành Xác suất:
+Probability = e^(Predicted Value) / (1 + e^(Predicted Value))
+ 
+Bước 3 - Áp dụng công thức tính F-Score:
+F-Score = Probability / Unconditional probability
+Trong đó: Unconditional probability = Số lượng các công ty 
+bị phát hiện thao túng / Tổng số lượng tất cả các công ty 
+trên thị trường
+Explanation: Dechow F-Score là thước đo xác suất đã được quy đổi (scaled probability) – cờ đỏ báo hiệu khả năng công ty đang quản trị lợi nhuận (thao túng) hoặc có sai sót trọng yếu trong BCTC.
+
+Ý nghĩa: F-Score cho biết xác suất thao túng của DN cụ thể cao gấp bao nhiêu lần so với xác suất có sai sót trung bình của toàn thị trường.
+• F-Score = 1.00: DN có xác suất sai sót đúng bằng kỳ vọng chung thị trường.
+
+Threshold: "Ngưỡng phân loại:
+• F-Score < 1.00 → 🟢 Rủi ro bình thường hoặc thấp (Normal or low risk)
+• F-Score > 1.00 → 🟡 Rủi ro trên mức bình thường (Above normal risk) – tỷ lệ cảnh báo nhầm còn khá cao
+• F-Score > 1.85 → 🟠 Rủi ro đáng kể (Substantial risk)
+• F-Score > 2.45 → 🔴 Rủi ro cao (High risk) – tỷ lệ bắt nhầm DN tốt giảm còn ~5%
+
+Điều kiện áp dụng:
+• Bắt buộc ≥2 năm BCTC liên tiếp
+• Nếu BCTC tự lập (chưa kiểm toán) → cộng thêm hệ số phạt rủi ro hoặc từ chối chạy mô hình
+• Không dùng trực tiếp ngưỡng > 2.45 của bài báo; phải backtest để tự định chuẩn lại mốc cảnh báo theo khẩu vị rủi ro tín dụng
+• Đầu ra bắt buộc trả về top biến kéo điểm cao nhất (VD: ch_rec tăng bất thường) để cán bộ tín dụng có căn cứ chất vấn DN
+• Nếu F-Score vượt ngưỡng → Block hồ sơ hoặc chuyển luồng thẩm định đặc biệt"
+
+Ref: Dechow (2011)
+https://doi.org/10.1111/j.1911-3846.2010.01041.x
+Pros: • 7 biến đều lấy từ BCTC thuần túy → không cần dữ liệu thị trường chứng khoán, phù hợp DN chưa niêm yết tại VN
+• rsst_acc bao phủ toàn bộ dồn tích (WC + NCO + FIN) → toàn diện hơn TATA của M-Score; khó làm đẹp một chiều
+• ch_rec và ch_inv đặc biệt nhạy với thực trạng VN: DN thường tăng phải thu bất thường hoặc ứ đọng tồn kho trước mùa vay vốn
+• soft_assets phản ánh tỷ trọng tài sản vô hình/dễ thao túng – phù hợp phát hiện vốn hóa chi phí phổ biến tại VN
+• F-Score dạng tỷ lệ so với thị trường → dễ diễn giải, có thể so sánh giữa các DN và ngành
+• Nền tảng logistic regression → linh hoạt điều chỉnh unconditional probability theo đặc thù mẫu VN
+✅ Thực tế hơn M-Score 1997; ít phụ thuộc dữ liệu thị trường hơn → khả năng triển khai tại VN cao
+
+Cons: • Unconditional probability (tỷ lệ DN bị phát hiện thao túng / tổng DN thị trường) rất khó ước lượng tại VN → F-Score bị lệch nếu dùng tỷ lệ của Mỹ
+• Hệ số hồi quy từ mẫu DN Mỹ bị SEC phát hiện (AAER) → bắt buộc tái ước lượng trên mẫu vi phạm VAS tại VN
+• rsst_acc yêu cầu phân tách chi tiết WC / NCO / FIN → nhiều DN VN không công bố đủ thông tin để tách đầu tư ngắn/dài hạn, nợ ưu tiên
+• Biến issue (phát hành chứng khoán) ít phổ biến với DN tư nhân VN → mất một biến có trọng số đáng kể (hệ số 1.029)
+• ch_cs phụ thuộc vào ΔPhải thu được ghi nhận đúng → nếu phải thu bị thao túng thì ch_cs cũng bị nhiễu
+• Cần ≥2 năm BCTC liên tiếp và chất lượng BCTC đủ tin cậy – nhiều DN VN có BCTC thiếu nhất quán giữa các kỳ
+⚠️ Cần backtest riêng trên dữ liệu VN và tự xác định unconditional probability trước khi triển khai thực tế
+
+

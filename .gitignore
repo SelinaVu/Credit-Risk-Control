@@ -1,0 +1,50 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Large ZIP archives and binary builds
+*.zip
+*.tar.gz
+*.rar
+build/
+dist/
+*.spec
+
+# PDF, Word & temp documentation files
+*.pdf
+*.docx
+*.doc
+*.log
+screenlog.*
+
+# Data & local storage
+storage/
+BCTC_Error_Reports/
+Error report/
+BCTC*
+Bank*
+Luan_van_Thac_si/
+Fintrust_EWS_Source/
+Fintrust_EWS_Browser/
+Fintrust_EWS_Docker/
+FinTrust_EWS_Update_Patch/
+financials_progress.csv
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# IDE & Editor files
+.agents/
+.vscode/
+.idea/
+.claude/

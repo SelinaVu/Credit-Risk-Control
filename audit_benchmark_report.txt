@@ -1,0 +1,207 @@
+TOTAL FILES: 32
+
+=================== AGX_Baocaotaichinh_2024_Kiemtoan_Hopnhat.pdf -> Ticker: AGX ===================
+Extracted Years: [2024, 2023]
+Year 2023: Match Rate = 90.5% (19/21)
+  -> MISMATCHED: [('Selling_Expense', 'Ext:330,642,983,914', 'GT:30,642,984,000'), ('OCF', 'Ext:51,447,039,275', 'GT:174,171,929,000')]
+Year 2024: Match Rate = 85.7% (18/21)
+  -> MISMATCHED: [('Net_Sales', 'Ext:4,492,815,561', 'GT:1,568,192,816,000'), ('COGS', 'Ext:467,334,951,947', 'GT:1,096,365,048,000'), ('OCF', 'Ext:90,111,893,203', 'GT:236,049,214,000')]
+
+=================== AGX_Baocaotaichinh_2025_Kiemtoan_Hopnhat.pdf -> Ticker: AGX ===================
+Extracted Years: [2025, 2024]
+Year 2024: Match Rate = 76.2% (16/21)
+  -> MISSING in Extracted: [('Current_Assets', '1,014,609,925,000'), ('Cash_Equivalents', '200,933,131,000'), ('Current_Receivables', '156,863,599,000'), ('Accounts_Receivable', '135,917,452,000'), ('Inventories', '213,213,097,000')]
+Year 2025: Match Rate = 76.2% (16/21)
+  -> MISSING in Extracted: [('Current_Assets', '1,385,574,177,000'), ('Cash_Equivalents', '88,361,297,000'), ('Current_Receivables', '213,252,897,000'), ('Accounts_Receivable', '186,448,636,000'), ('Inventories', '230,671,980,000')]
+
+=================== ALV_Baocaotaichinh_2023_Kiemtoan.pdf -> Ticker: ALV ===================
+Extracted Years: [2023, 2022]
+Year 2022: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('Interest_Expense', 'Ext:1,036,165,621', 'GT:0')]
+Year 2023: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('OCF', 'Ext:45,272,738', 'GT:26,360,480,000')]
+
+=================== ALV_Baocaotaichinh_2024_Kiemtoan.pdf -> Ticker: ALV ===================
+Extracted Years: [2024, 2023]
+Year 2023: Match Rate = 95.2% (20/21)
+  -> MISSING in Extracted: [('OCF', '26,360,480,000')]
+Year 2024: Match Rate = 95.2% (20/21)
+  -> MISSING in Extracted: [('OCF', '20,432,152,000')]
+
+=================== ANV_Baocaotaichinh_2021_Kiemtoan_Hopnhat.pdf -> Ticker: ANV ===================
+Extracted Years: [2021, 2020]
+Year 2020: No ground truth in Excel
+Year 2021: No ground truth in Excel
+
+=================== ANV_Baocaotaichinh_2022_Kiemtoan_Hopnhat.pdf -> Ticker: ANV ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 85.7% (18/21)
+  -> MISSING in Extracted: [('Tangible_PPE_Cost', '1,599,867,179,000'), ('Total_Assets', '5,467,653,137,750')]
+  -> MISMATCHED: [('Fixed_Assets', 'Ext:432', 'GT:1,102,095,360,000')]
+
+=================== BBH_Baocaotaichinh_2021_Kiemtoan_compressed.pdf -> Ticker: BBH ===================
+Extracted Years: [2021, 2020]
+Year 2020: No ground truth in Excel
+Year 2021: No ground truth in Excel
+
+=================== BBH_Baocaotaichinh_2022_Kiemtoan_compressed.pdf -> Ticker: BBH ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 85.7% (18/21)
+  -> MISMATCHED: [('Tangible_PPE_Cost', 'Ext:750', 'GT:66,382,885,000'), ('Total_Assets', 'Ext:102,574,239,045', 'GT:91,169,245,000'), ('OCF', 'Ext:756,761,976', 'GT:0')]
+
+=================== BCV_Baocaotaichinh_2023_Kiemtoan.pdf -> Ticker: BCV ===================
+Extracted Years: [2023, 2022]
+Year 2022: Match Rate = 100.0% (21/21)
+Year 2023: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('Selling_Expense', 'Ext:1,012,023', 'GT:0')]
+
+=================== BCV_Baocaotaichinh_2024_Kiemtoan.pdf -> Ticker: BCV ===================
+Extracted Years: [2024, 2023]
+Year 2023: Match Rate = 85.7% (18/21)
+  -> MISSING in Extracted: [('OCF', '-988,992,000')]
+  -> MISMATCHED: [('Tangible_PPE_Cost', 'Ext:495,199,881,229', 'GT:45,199,881,000'), ('Selling_Expense', 'Ext:2,025', 'GT:0')]
+Year 2024: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('OCF', 'Ext:3,871,403,239', 'GT:3,811,403,000')]
+
+=================== BIO_Baocaotaichinh_2024_Kiemtoan_compressed.pdf -> Ticker: BIO ===================
+Extracted Years: [2024, 2023]
+Year 2023: Match Rate = 90.5% (19/21)
+  -> MISMATCHED: [('Current_Liabilities', 'Ext:112,820,144,290', 'GT:12,820,144,000'), ('Interest_Expense', 'Ext:0', 'GT:254,175,000')]
+Year 2024: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('Current_Liabilities', 'Ext:112,229,557,539', 'GT:12,229,558,000')]
+
+=================== BIO_Baocaotaichinh_2025_Kiemtoan.pdf -> Ticker: BIO ===================
+Extracted Years: [2025, 2024]
+Year 2024: Match Rate = 90.5% (19/21)
+  -> MISMATCHED: [('Total_Liabilities', 'Ext:0', 'GT:12,229,558,000'), ('Interest_Expense', 'Ext:2,026', 'GT:0')]
+Year 2025: Match Rate = 85.7% (18/21)
+  -> MISMATCHED: [('Total_Liabilities', 'Ext:12,229,557,539', 'GT:9,610,302,000'), ('Net_Sales', 'Ext:775,212,315,883', 'GT:75,212,316,000'), ('COGS', 'Ext:751,454,839,848', 'GT:51,454,840,000')]
+
+=================== CAT_Baocaotaichinh_2022_Kiemtoan.pdf -> Ticker: CAT ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 95.2% (20/21)
+  -> MISSING in Extracted: [('Total_Assets', '413,106,004,000')]
+
+=================== CAT_Baocaotaichinh_2023_Kiemtoan.pdf -> Ticker: CAT ===================
+Extracted Years: [2023, 2022]
+Year 2022: Match Rate = 100.0% (21/21)
+Year 2023: Match Rate = 100.0% (21/21)
+
+=================== CLC_Bao_cao_tai_chinh_nam_2024_da_kiem_toan_va_giai_trinh.pdf -> Ticker: CLC ===================
+Extracted Years: [2024, 2023]
+Year 2023: Match Rate = 47.6% (10/21)
+  -> MISMATCHED: [('Inventories', 'Ext:3', 'GT:1,094,837,437,000'), ('Equity', 'Ext:79,208,296,024', 'GT:875,597,321,000'), ('Retained_Earnings', 'Ext:229,146,519,328', 'GT:225,535,544,000'), ('Net_Sales', 'Ext:297,083,002,869', 'GT:2,970,830,029,000'), ('COGS', 'Ext:293,713,910,406', 'GT:2,639,172,829,000'), ('Gross_Profit', 'Ext:3,369,092,463', 'GT:331,657,199,000'), ('Interest_Expense', 'Ext:81,703,985', 'GT:20,511,795,000'), ('Selling_Expense', 'Ext:10,068,368,647', 'GT:33,976,049,000'), ('GA_Expense', 'Ext:5,379,062,509', 'GT:78,418,027,000'), ('EBT', 'Ext:180,588,505,041', 'GT:176,074,786,000'), ('Net_Income', 'Ext:43,976,462,812', 'GT:140,365,487,000')]
+Year 2024: Match Rate = 71.4% (15/21)
+  -> MISMATCHED: [('Inventories', 'Ext:1,094,837,436,546', 'GT:1,391,721,926,000'), ('Equity', 'Ext:879,208,296,024', 'GT:909,803,704,000'), ('Interest_Expense', 'Ext:71,931,185', 'GT:19,121,439,000'), ('Selling_Expense', 'Ext:66,936,922', 'GT:45,179,245,000'), ('GA_Expense', 'Ext:2,434,372', 'GT:112,988,622,000'), ('EBT', 'Ext:9,029,997,878', 'GT:190,291,998,000')]
+
+=================== CLC_Bao_cao_tai_chinh_nam_2025_da_kiem_toan_va_giai_trinh.pdf -> Ticker: CLC ===================
+Extracted Years: [2025, 2024]
+Year 2024: Match Rate = 47.6% (10/21)
+  -> MISSING in Extracted: [('OCF', '-130,958,329,000')]
+  -> MISMATCHED: [('Current_Assets', 'Ext:84,282,095,680', 'GT:1,841,282,096,000'), ('Current_Receivables', 'Ext:34,585,712,275', 'GT:345,815,712,000'), ('Inventories', 'Ext:139,172,925,552', 'GT:1,391,721,926,000'), ('Tangible_PPE_Cost', 'Ext:863,491,042', 'GT:861,354,911,000'), ('Net_Sales', 'Ext:369,723,816,321', 'GT:3,691,723,816,000'), ('COGS', 'Ext:37,286,921,418', 'GT:3,284,713,079,000'), ('Interest_Expense', 'Ext:3,284,713,078,582', 'GT:19,121,439,000'), ('Selling_Expense', 'Ext:702,434,372', 'GT:45,179,245,000'), ('GA_Expense', 'Ext:976', 'GT:112,988,622,000'), ('Net_Income', 'Ext:10,229,088,842', 'GT:150,229,089,000')]
+Year 2025: Match Rate = 61.9% (13/21)
+  -> MISMATCHED: [('Current_Assets', 'Ext:824,744,334,763', 'GT:1,824,744,335,000'), ('Current_Receivables', 'Ext:3,973,894,378', 'GT:391,738,944,000'), ('Accounts_Receivable', 'Ext:38,770,922,509', 'GT:387,709,225,000'), ('Total_Assets', 'Ext:1,232,660', 'GT:1,922,712,313,000'), ('Interest_Expense', 'Ext:3,721,388,380,391', 'GT:20,599,409,000'), ('Selling_Expense', 'Ext:63,774,970,922', 'GT:32,099,231,000'), ('GA_Expense', 'Ext:112,988,621', 'GT:98,944,460,000'), ('OCF', 'Ext:-130,958,329,159', 'GT:189,260,499,000')]
+
+=================== DCR_Baocaotaichinh_2021_Kiemtoan.pdf -> Ticker: DCR ===================
+Extracted Years: [2021, 2020]
+Year 2020: No ground truth in Excel
+Year 2021: No ground truth in Excel
+
+=================== DCR_Baocaotaichinh_2022_Kiemtoan.pdf -> Ticker: DCR ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('OCF', 'Ext:-1,575,428,453', 'GT:-11,652,606,000')]
+
+=================== FPT_Baocaotaichinh_2022_Kiemtoan_Hopnhat.pdf -> Ticker: FPT ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 81.0% (17/21)
+  -> MISMATCHED: [('Current_Receivables', 'Ext:6,882,182,894,987', 'GT:8,502,895,162,000'), ('Interest_Expense', 'Ext:483,995', 'GT:645,725,556,000'), ('Selling_Expense', 'Ext:44,009,527,680,911', 'GT:4,526,440,692,000'), ('OCF', 'Ext:53,831,756,700', 'GT:5,053,831,757,000')]
+
+=================== FPT_Baocaotaichinh_2023_Kiemtoan_Hopnhat.pdf -> Ticker: FPT ===================
+Extracted Years: [2023, 2022]
+Year 2022: Match Rate = 90.5% (19/21)
+  -> MISMATCHED: [('GA_Expense', 'Ext:44,009,527,680,911', 'GT:5,846,280,654,000'), ('EBT', 'Ext:6,491,343,454,469', 'GT:7,662,282,960,000')]
+Year 2023: Match Rate = 76.2% (16/21)
+  -> MISMATCHED: [('Net_Sales', 'Ext:2,617,900,827,385', 'GT:52,617,900,827,385'), ('COGS', 'Ext:17,701,652,617,297', 'GT:32,298,347,382,703'), ('Selling_Expense', 'Ext:242,551,906,960', 'GT:5,242,551,907,000'), ('GA_Expense', 'Ext:2,617,900,827,385', 'GT:6,625,373,638,000'), ('EBT', 'Ext:7,788,049,739,616', 'GT:9,203,006,099,000')]
+
+=================== GVR_Baocaotaichinh_2021_Kiemtoan_Hopnhat.pdf -> Ticker: GVR ===================
+Extracted Years: [2021, 2020]
+Year 2020: No ground truth in Excel
+Year 2021: No ground truth in Excel
+
+=================== GVR_Baocaotaichinh_2022_Kiemtoan_Hopnhat.pdf -> Ticker: GVR ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 61.9% (13/21)
+  -> MISSING in Extracted: [('Net_Sales', '25,425,943,612,000'), ('COGS', '19,083,830,556,000'), ('Gross_Profit', '6,342,113,056,000'), ('Interest_Expense', '490,848,599,000'), ('Selling_Expense', '591,230,197,000'), ('GA_Expense', '1,762,820,187,000')]
+  -> MISMATCHED: [('EBT', 'Ext:12', 'GT:5,701,619,331,000'), ('Net_Income', 'Ext:12', 'GT:4,753,259,290,000')]
+
+=================== HSG-BCTC-2023.pdf -> Ticker: HSG ===================
+Extracted Years: [2023, 2022]
+Year 2022: Match Rate = 47.6% (10/21)
+  -> MISSING in Extracted: [('Total_Assets', '17,025,411,188,000')]
+  -> MISMATCHED: [('Current_Assets', 'Ext:17,025,411,187,931', 'GT:9,834,993,231,000'), ('Cash_Equivalents', 'Ext:9,834,093,231,398', 'GT:330,134,958,000'), ('Inventories', 'Ext:76,286,061,206,917,396,469,645,312', 'GT:7,395,309,340,000'), ('Fixed_Assets', 'Ext:260', 'GT:5,958,828,375,000'), ('Total_Liabilities', 'Ext:17,025,411,187,931', 'GT:6,141,841,220,000'), ('Current_Liabilities', 'Ext:6,141,841,220,117', 'GT:6,009,187,396,000'), ('COGS', 'Ext:49,380,881,145,102', 'GT:44,771,944,789,711'), ('Gross_Profit', 'Ext:329,754,806,365', 'GT:4,938,691,161,756'), ('GA_Expense', 'Ext:50,090,135,318,501', 'GT:522,227,362,000'), ('OCF', 'Ext:-214,502,798,701', 'GT:2,844,560,116,000')]
+Year 2023: Match Rate = 52.4% (11/21)
+  -> MISSING in Extracted: [('Total_Assets', '17,365,305,645,644')]
+  -> MISMATCHED: [('Current_Assets', 'Ext:17,365,305,645,644', 'GT:11,274,839,905,000'), ('Cash_Equivalents', 'Ext:11,274,839,904,924', 'GT:596,862,913,000'), ('Inventories', 'Ext:10', 'GT:7,628,606,121,000'), ('Fixed_Assets', 'Ext:250', 'GT:5,019,581,505,000'), ('Total_Liabilities', 'Ext:17,365,305,645,644', 'GT:6,585,139,273,223'), ('COGS', 'Ext:31,554,530,760,101', 'GT:28,590,018,867,000'), ('Gross_Profit', 'Ext:96,130,196,549', 'GT:3,060,642,090,000'), ('GA_Expense', 'Ext:32,084,297,603,056', 'GT:406,967,911,000'), ('OCF', 'Ext:265,186,563,000', 'GT:1,865,627,170,000')]
+
+=================== HSG-BCTC-2024.pdf -> Ticker: HSG ===================
+Extracted Years: [2024, 2023]
+Year 2023: Match Rate = 76.2% (16/21)
+  -> MISSING in Extracted: [('Current_Assets', '11,274,839,905,000')]
+  -> MISMATCHED: [('Fixed_Assets', 'Ext:19,581,505,116', 'GT:5,019,581,505,000'), ('Equity', 'Ext:11,274,839,904,924', 'GT:10,780,166,372,421'), ('Selling_Expense', 'Ext:2,024', 'GT:2,476,864,156,000'), ('GA_Expense', 'Ext:31,650,660,956,650', 'GT:406,967,911,000')]
+Year 2024: Match Rate = 81.0% (17/21)
+  -> MISSING in Extracted: [('Current_Assets', '14,174,354,520,000')]
+  -> MISMATCHED: [('Equity', 'Ext:14,174,354,519,923', 'GT:10,916,937,055,537'), ('Selling_Expense', 'Ext:12', 'GT:3,344,662,264,000'), ('GA_Expense', 'Ext:39,271,893,738,448', 'GT:495,608,090,000')]
+
+=================== HSG-BCTC-2025.pdf -> Ticker: HSG ===================
+Extracted Years: [2025, 2024]
+Year 2024: Match Rate = 90.5% (19/21)
+  -> MISMATCHED: [('Equity', 'Ext:40,916,937,055,537', 'GT:10,916,937,055,537'), ('GA_Expense', 'Ext:39,271,893,738,448', 'GT:495,608,090,000')]
+Year 2025: Match Rate = 95.2% (20/21)
+  -> MISMATCHED: [('GA_Expense', 'Ext:36,537,815,078,167', 'GT:665,712,007,000')]
+
+=================== PAN_Baocaotaichinh_2021_Kiemtoan_Hopnhat.pdf -> Ticker: PAN ===================
+Extracted Years: [2021, 2020]
+Year 2020: No ground truth in Excel
+Year 2021: No ground truth in Excel
+
+=================== PAN_Baocaotaichinh_2022_Kiemtoan_Hopnhat.pdf -> Ticker: PAN ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 85.7% (18/21)
+  -> MISSING in Extracted: [('Accounts_Receivable', '1,344,795,692,000')]
+  -> MISMATCHED: [('Cash_Equivalents', 'Ext:756,653,454,986', 'GT:1,837,986,936,000'), ('Current_Receivables', 'Ext:1,606,169,711,541', 'GT:2,068,096,701,000')]
+
+=================== VGP_Baocaotaichinh_2022_Kiemtoan.pdf -> Ticker: VGP ===================
+Extracted Years: [2022, 2021]
+Year 2021: No ground truth in Excel
+Year 2022: Match Rate = 52.4% (11/21)
+  -> MISSING in Extracted: [('Net_Sales', '12,925,636,305,000'), ('COGS', '12,876,061,160,000'), ('Gross_Profit', '49,575,145,000'), ('Interest_Expense', '169,320,139,000'), ('Selling_Expense', '2,310,309,000'), ('GA_Expense', '6,465,744,000'), ('EBT', '25,850,867,000'), ('Net_Income', '20,584,199,000'), ('OCF', '-77,587,047,000')]
+  -> MISMATCHED: [('Current_Assets', 'Ext:4,368,557,034,839', 'GT:6,635,011,064,000')]
+
+=================== VGP_Baocaotaichinh_2023_Kiemtoan.pdf -> Ticker: VGP ===================
+Extracted Years: [2023, 2022]
+Year 2022: Match Rate = 76.2% (16/21)
+  -> MISSING in Extracted: [('Current_Assets', '6,635,011,064,000'), ('Retained_Earnings', '58,322,197,000')]
+  -> MISMATCHED: [('Equity', 'Ext:6,035,011,064,083', 'GT:210,612,531,000'), ('Interest_Expense', 'Ext:139,026', 'GT:169,320,139,000'), ('Selling_Expense', 'Ext:23,103,091,475', 'GT:2,310,309,000')]
+Year 2023: Match Rate = 71.4% (15/21)
+  -> MISSING in Extracted: [('Current_Assets', '6,385,458,886,000')]
+  -> MISMATCHED: [('Accounts_Receivable', 'Ext:878,922,430,573', 'GT:5,878,922,431,000'), ('Equity', 'Ext:6,385,458,885,817', 'GT:222,352,150,000'), ('Retained_Earnings', 'Ext:8,322,197', 'GT:70,061,816,000'), ('Interest_Expense', 'Ext:169,320', 'GT:264,217,415,000'), ('Net_Income', 'Ext:417,217,763,909', 'GT:17,217,764,000')]
+
+=================== VIX-BCTC-2023.pdf -> Ticker: VIX ===================
+Extracted Years: [2023, 2022]
+No ground truth row for ticker VIX
+
+=================== VIX-BCTC-2024.pdf -> Ticker: VIX ===================
+Extracted Years: [2024, 2023]
+No ground truth row for ticker VIX
+
+=================== VIX-BCTC-2025.pdf -> Ticker: VIX ===================
+Extracted Years: [2025, 2024]
+No ground truth row for ticker VIX
