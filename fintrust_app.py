@@ -258,6 +258,170 @@ def save_to_db(ticker, company_name, financial_data):
     except Exception:
         pass
 
+def save_manual_overrides_to_storage(ticker, overrides):
+    """Lưu trữ số liệu hiệu chỉnh thủ công của người dùng vào SQLite và file JSON để bảo toàn khi reload trang web."""
+    if not ticker or ticker == "N/A":
+        return
+    # 1. Lưu file JSON trong storage
+    try:
+        st_dir = get_storage_dir()
+        override_file = os.path.join(st_dir, f"{ticker}_overrides.json")
+        with open(override_file, "w", encoding="utf-8") as f:
+            json.dump(overrides, f, ensure_ascii=False, indent=4)
+    except Exception:
+        pass
+        
+    # 2. Lưu vào SQLite
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS manual_overrides (
+                ticker TEXT,
+                year INTEGER,
+                variable TEXT,
+                value REAL,
+                PRIMARY KEY (ticker, year, variable)
+            )
+        """)
+        cursor.execute("DELETE FROM manual_overrides WHERE ticker = ?", (ticker,))
+        if overrides:
+            for y_item, v_dict in overrides.items():
+                try:
+                    y_int = int(y_item)
+                except (ValueError, TypeError):
+                    continue
+                for var_k, val_v in v_dict.items():
+                    if val_v is not None and not pd.isna(val_v):
+                        cursor.execute("""
+                            INSERT OR REPLACE INTO manual_overrides (ticker, year, variable, value)
+                            VALUES (?, ?, ?, ?)
+                        """, (ticker, y_int, var_k, float(val_v)))
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+def load_manual_overrides_from_storage(ticker):
+    """Tải lại số liệu hiệu chỉnh thủ công đã lưu từ SQLite hoặc file JSON."""
+    if not ticker or ticker == "N/A":
+        return {}
+    res = {}
+    # Thử đọc từ SQLite trước
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS manual_overrides (
+                ticker TEXT,
+                year INTEGER,
+                variable TEXT,
+                value REAL,
+                PRIMARY KEY (ticker, year, variable)
+            )
+        """)
+        cursor.execute("SELECT year, variable, value FROM manual_overrides WHERE ticker = ?", (ticker,))
+        rows = cursor.fetchall()
+        conn.close()
+        if rows:
+            for y, var, val in rows:
+                if y not in res:
+                    res[y] = {}
+                res[y][var] = val
+            return res
+    except Exception:
+        pass
+        
+    # Fallback: đọc từ file JSON trong storage
+    try:
+        st_dir = get_storage_dir()
+        override_file = os.path.join(st_dir, f"{ticker}_overrides.json")
+        if os.path.exists(override_file):
+            with open(override_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                return {int(y): v for y, v in data.items()}
+    except Exception:
+        pass
+    return res
+
+def save_uploaded_bctc_file(ticker, filename, file_bytes):
+    """Lưu vĩnh viễn file BCTC (PDF/Excel) được tải lên vào kho lưu trữ storage và cơ sở dữ liệu SQLite."""
+    if not ticker or ticker == "N/A" or not file_bytes:
+        return None
+    try:
+        st_dir = get_storage_dir()
+        target_dir = os.path.join(st_dir, "uploaded_bctc", ticker)
+        os.makedirs(target_dir, exist_ok=True)
+        file_path = os.path.join(target_dir, filename)
+        with open(file_path, "wb") as f:
+            f.write(file_bytes)
+            
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS uploaded_documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker TEXT,
+                filename TEXT,
+                file_path TEXT,
+                file_size INTEGER,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(ticker, filename)
+            )
+        """)
+        cursor.execute("""
+            INSERT OR REPLACE INTO uploaded_documents (ticker, filename, file_path, file_size, uploaded_at)
+            VALUES (?, ?, ?, ?, datetime('now', 'localtime'))
+        """, (ticker, filename, file_path, len(file_bytes)))
+        conn.commit()
+        conn.close()
+        return file_path
+    except Exception:
+        return None
+
+def get_uploaded_bctc_files(ticker):
+    """Truy vấn danh sách các file BCTC gốc đã lưu trữ của mã doanh nghiệp."""
+    if not ticker or ticker == "N/A":
+        return []
+    res = []
+    # 1. Tra cứu từ SQLite
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS uploaded_documents (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticker TEXT,
+                filename TEXT,
+                file_path TEXT,
+                file_size INTEGER,
+                uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(ticker, filename)
+            )
+        """)
+        cursor.execute("SELECT filename, file_path, file_size, uploaded_at FROM uploaded_documents WHERE ticker = ? ORDER BY uploaded_at DESC", (ticker,))
+        rows = cursor.fetchall()
+        conn.close()
+        for fn, fp, sz, up_at in rows:
+            if os.path.exists(fp):
+                res.append({"filename": fn, "file_path": fp, "file_size": sz, "uploaded_at": up_at})
+    except Exception:
+        pass
+        
+    # 2. Quét dự phòng thư mục nếu SQLite chưa kịp ghi
+    if not res:
+        try:
+            st_dir = get_storage_dir()
+            target_dir = os.path.join(st_dir, "uploaded_bctc", ticker)
+            if os.path.exists(target_dir):
+                for fn in os.listdir(target_dir):
+                    fp = os.path.join(target_dir, fn)
+                    if os.path.isfile(fp) and not fn.startswith("."):
+                        res.append({"filename": fn, "file_path": fp, "file_size": os.path.getsize(fp), "uploaded_at": "Đã lưu"})
+        except Exception:
+            pass
+    return res
+
 def reconcile_financial_data(financial_data):
     """Tự động chuẩn hóa và cân đối các chỉ tiêu kế toán cơ bản theo Thông tư 200."""
     if not financial_data:
@@ -271,9 +435,23 @@ def reconcile_financial_data(financial_data):
         for pos_var in ["COGS", "Selling_Expense", "GA_Expense", "Interest_Expense", "Tangible_PPE_Cost", "Total_Assets", "Total_Liabilities", "Current_Liabilities", "Current_Assets", "Fixed_Assets", "Cash_Equivalents", "Inventories", "Current_Receivables", "Accounts_Receivable"]:
             if pos_var in y_data and y_data[pos_var] is not None and not pd.isna(y_data[pos_var]):
                 try:
-                    y_data[pos_var] = abs(float(y_data[pos_var]))
+                    val_float = abs(float(y_data[pos_var]))
+                    # Khắc phục lỗi rác OCR: trích mã số kế toán hoặc số thứ tự nhỏ (< 500 đ) làm giá trị tài chính (Slide 13, 14 VBH)
+                    if 0 < val_float <= 500:
+                        val_float = 0.0
+                    y_data[pos_var] = val_float
                 except (ValueError, TypeError):
                     y_data[pos_var] = 0.0
+            
+        # Loại bỏ các số rác < 500 đ cho các biến còn lại (ví dụ Net_Income = 2 đ)
+        for any_var in ["Net_Income", "Retained_Earnings", "EBT", "Gross_Profit"]:
+            if any_var in y_data and y_data[any_var] is not None and not pd.isna(y_data[any_var]):
+                try:
+                    val_float = float(y_data[any_var])
+                    if 0 < abs(val_float) <= 500:
+                        y_data[any_var] = 0.0
+                except (ValueError, TypeError):
+                    y_data[any_var] = 0.0
             
         # 2. Cân đối KQKD: Lợi nhuận gộp (20) = Doanh thu thuần (10) - Giá vốn (11)
         if sales is not None and not pd.isna(sales) and sales > 0:
@@ -1867,7 +2045,7 @@ KEYWORDS_CONFIG_SF = {
     },
     "Short_Term_Borrowings": {
         "pos": [["vay", "nganhan"], ["vayvanothuetaichinhnganhan"], ["vayvanotaichinhnganhan"], ["vayvanonganhan"], ["vaynganhan"]],
-        "neg": ["daihan"]
+        "neg": ["daihan", "phaithu", "chovay"]
     },
     "Equity": {
         "pos": [["vonchusohuu"], ["vonvacacquy"], ["nguonvonchusohuu"]],
@@ -2001,30 +2179,66 @@ def match_line_to_var_sf(line_text, code_token, statement):
 
 def extract_numbers_from_tokens(tokens, code_token):
     numeric_vals = []
+    known_std_codes = {
+        "10", "11", "20", "21", "22", "23", "25", "26", "30", "31", "32", "40", "50", "60",
+        "100", "110", "111", "112", "120", "130", "131", "132", "135", "137", "140", "141",
+        "150", "200", "210", "220", "221", "222", "223", "227", "228", "229", "230", "240",
+        "250", "260", "270", "300", "310", "311", "312", "313", "314", "315", "318", "319",
+        "320", "321", "322", "330", "400", "410", "411", "412", "414", "415", "418", "421", "422"
+    }
     for vt in tokens:
         cleaned_vt = vt.strip(" \t\r\n|:;,~")
         if not cleaned_vt:
             continue
             
         # Nếu token là gạch ngang biểu diễn giá trị 0
-        if cleaned_vt in ["-", "—", "–", "¬"]:
+        if cleaned_vt in ["-", "—", "–", "¬", "−"]:
             numeric_vals.append(0.0)
             continue
+
+        # Tách mã chỉ tiêu nếu bị dính vào đầu số tiền (ví dụ: "300.665.242.118.219", "140.515.501.714.434")
+        m_prefix = re.match(r'^([1-4]\d{2}|[1-6]\d)[.,](\d{1,3}(?:[.,]\d{3}){2,})$', cleaned_vt)
+        if m_prefix:
+            cand_c = m_prefix.group(1)
+            if not code_token:
+                code_token = cand_c
+            cleaned_vt = m_prefix.group(2)
             
         is_neg = False
-        if (cleaned_vt.startswith("(") and cleaned_vt.endswith(")")) or ("(" in cleaned_vt and ")" in cleaned_vt) or cleaned_vt.startswith("-") or cleaned_vt.endswith("-"):
+        if ("(" in cleaned_vt and ")" in cleaned_vt) or any(cleaned_vt.startswith(p) or cleaned_vt.endswith(p) for p in ["-", "—", "–", "−"]):
             is_neg = True
-            cleaned_vt = re.sub(r'[\(\)]', '', cleaned_vt)
+        cleaned_vt = re.sub(r'[\(\)đĐvVnNdD\s]', '', cleaned_vt)
+        cleaned_vt = cleaned_vt.replace("—", "").replace("–", "").replace("−", "").replace("-", "")
         
-        # Giữ lại chỉ các chữ số và dấu trừ trong token sau khi đã xử lý âm để loại bỏ dấu phân cách, 
-        # ký tự rác hoặc lỗi OCR phân tách ký tự đặc biệt (ví dụ: U+2044 fraction slash '⁄')
-        cleaned_vt_num = re.sub(r'[^0-9\-]', '', cleaned_vt)
+        # Giữ lại chỉ các chữ số trong token sau khi đã xử lý âm để loại bỏ dấu phân cách
+        cleaned_vt_num = re.sub(r'[^0-9]', '', cleaned_vt)
+        if not cleaned_vt_num:
+            continue
             
         try:
-            val = float(cleaned_vt_num)
             # Không lấy chính mã số chỉ tiêu làm giá trị số tài chính
             if code_token and cleaned_vt_num == code_token:
                 continue
+            # Nếu token là mã chỉ tiêu kế toán chuẩn đứng riêng lẻ, bỏ qua không coi là số tiền
+            if cleaned_vt_num in known_std_codes:
+                if not code_token:
+                    code_token = cleaned_vt_num
+                    continue
+                elif cleaned_vt_num == code_token:
+                    continue
+                    
+            val = float(cleaned_vt_num)
+            # Khắc phục dính chuỗi số siêu lớn do ghép cột nhiều năm (ví dụ APF Slide 8, 10 dính 1.492.430.980 và 906.404.137)
+            if val > 1e16 and len(cleaned_vt_num) >= 16:
+                half_len = len(cleaned_vt_num) // 2
+                val1 = float(cleaned_vt_num[:half_len])
+                val2 = float(cleaned_vt_num[half_len:])
+                if is_neg:
+                    val1 = -val1
+                    val2 = -val2
+                numeric_vals.extend([val1, val2])
+                continue
+
             if is_neg:
                 val = -val
             numeric_vals.append(val)
@@ -2032,14 +2246,14 @@ def extract_numbers_from_tokens(tokens, code_token):
             continue
 
     # 1. Lọc bỏ cột Thuyết minh nếu có thừa số ở đầu dòng:
-    # Nếu danh sách có nhiều hơn 2 số và số đầu tiên là số nhỏ (< 100 và != 0) 
+    # Nếu danh sách có từ 2 số trở lên và số đầu tiên là số nhỏ (< 100 và != 0) 
     # trong khi các số phía sau là số tài chính thực tế (>= 1,000,000 hoặc == 0)
-    if len(numeric_vals) > 2:
+    if len(numeric_vals) >= 2:
         if 0 < abs(numeric_vals[0]) < 100 and any(abs(v) >= 1000000 or v == 0 for v in numeric_vals[1:]):
             numeric_vals = numeric_vals[1:]
 
-    # 2. Lọc bỏ số rác, footnote hoặc số trang ở cuối dòng (ví dụ CSC bị dính số 3 hoặc 2 ở cuối dòng đẩy lệch năm)
-    if len(numeric_vals) > 2:
+    # 2. Lọc bỏ số rác, footnote hoặc số trang ở cuối dòng (ví dụ dính số trang 2 hoặc 3 ở cuối dòng)
+    if len(numeric_vals) >= 2:
         if 0 < abs(numeric_vals[-1]) < 100 and any(abs(v) >= 1000000 for v in numeric_vals[:-1]):
             numeric_vals = numeric_vals[:-1]
 
@@ -2315,8 +2529,8 @@ def parse_bctc_pdf(file_bytes, filename=""):
                 
             # Nhận diện mã chỉ tiêu: Lấy số hiệu kế toán đầu tiên xuất hiện trên dòng (<= 500)
             code_token = None
-            for idx, tok in enumerate(tokens[:6]):
-                if re.match(r'^\d+\.$', tok.strip()):
+            for idx, tok in enumerate(tokens[:15]):
+                if re.match(r'^[1-9]\.$', tok.strip()):
                     continue
                 tok_clean = tok.strip().replace(".", "").replace(",", "").lower()
                 ocr_code_corrections = {
@@ -2947,8 +3161,8 @@ def parse_bctc_pdf_ocr(file_bytes, filename):
                 
             # Nhận diện mã chỉ tiêu: Lấy số hiệu kế toán đầu tiên xuất hiện trên dòng (<= 500)
             code_token = None
-            for idx, tok in enumerate(tokens[:6]):
-                if re.match(r'^\d+\.$', tok.strip()):
+            for idx, tok in enumerate(tokens[:15]):
+                if re.match(r'^[1-9]\.$', tok.strip()):
                     continue
                 tok_clean = tok.strip().replace(".", "").replace(",", "").lower()
                 ocr_code_corrections = {
@@ -4553,10 +4767,11 @@ with st.sidebar.expander("ℹ️ Lưu ý chất lượng file & PDF quét ảnh"
 st.sidebar.markdown("---")
 st.sidebar.subheader("🏢 Thông tin Doanh nghiệp")
 is_above_10 = st.sidebar.checkbox("Doanh nghiệp hoạt động >= 10 năm", value=True)
+help_age_msg = "Số năm hoạt động thực tế từ khi thành lập. Lưu ý: Mô hình học thuật gốc SA Index (Hadlock & Pierce, 2010) chuẩn hóa chặn trần tuổi tối đa ở mức 37 năm (min(Age, 37)) để tránh méo mó phi tuyến."
 if is_above_10:
-    firm_age_input = st.sidebar.number_input("Tuổi doanh nghiệp (năm)", min_value=10, max_value=100, value=10, step=1, help="Số năm hoạt động thực tế từ khi thành lập")
+    firm_age_input = st.sidebar.number_input("Tuổi doanh nghiệp (năm)", min_value=10, max_value=100, value=10, step=1, help=help_age_msg)
 else:
-    firm_age_input = st.sidebar.number_input("Tuổi doanh nghiệp (năm)", min_value=1, max_value=9, value=5, step=1, help="Số năm hoạt động thực tế từ khi thành lập")
+    firm_age_input = st.sidebar.number_input("Tuổi doanh nghiệp (năm)", min_value=1, max_value=9, value=5, step=1, help=help_age_msg)
 
 industry_options = ["Khác / Mặc định", "Basic Materials (Nguyên vật liệu)", "Consumer Goods (Hàng tiêu dùng)", "Industrials (Công nghiệp)", "Oil & Gas (Dầu khí)", "Technology (Công nghệ)"]
 default_ind_idx = 0
@@ -4770,6 +4985,13 @@ elif uploaded_files:
             """)
             
 if extracted_data:
+    # Tự động nạp các số liệu hiệu chỉnh thủ công đã lưu từ SQLite/file nếu session chưa có (Khắc phục Slide 6 ABS)
+    current_detected_ticker = list(tickers_detected)[0] if tickers_detected else "N/A"
+    if ("manual_overrides" not in st.session_state or not st.session_state["manual_overrides"]) and current_detected_ticker != "N/A":
+        saved_overrides = load_manual_overrides_from_storage(current_detected_ticker)
+        if saved_overrides:
+            st.session_state["manual_overrides"] = saved_overrides
+
     # Áp dụng các số liệu hiệu chỉnh thủ công từ người dùng (nếu có)
     if "manual_overrides" in st.session_state and st.session_state["manual_overrides"]:
         for oy, o_dict in st.session_state["manual_overrides"].items():
@@ -4821,6 +5043,12 @@ if extracted_data:
 
     tickers_detected.add(main_ticker)
     summary_ticker = main_ticker
+
+    # Tự động lưu trữ vĩnh viễn các file BCTC được tải lên vào kho lưu trữ của doanh nghiệp
+    if uploaded_files and main_ticker and main_ticker != "N/A":
+        for up_f in uploaded_files:
+            up_bytes = up_f.getvalue() if hasattr(up_f, "getvalue") else up_f.read()
+            save_uploaded_bctc_file(main_ticker, up_f.name, up_bytes)
     years_list = sorted(list(extracted_data.keys()))
     summary_years = ", ".join(map(str, years_list))
 
@@ -5609,6 +5837,7 @@ if extracted_data:
 
         # Hiển thị bảng chỉ số hoạt động
         st.dataframe(pd.DataFrame(activity_rows), use_container_width=True, hide_index=True)
+        st.caption("💡 **Lưu ý về phương pháp tính**: Bảng trên tính các vòng quay dựa trên số dư tại thời điểm cuối kỳ báo cáo. Một số nguồn tài chính như Vietstock tính theo **Số dư bình quân = (Đầu kỳ + Cuối kỳ) / 2**, do đó kết quả có thể có sự chênh lệch nhỏ.")
 
         # Biểu đồ so sánh vòng quay
         col_act1, col_act2 = st.columns(2)
@@ -6060,12 +6289,22 @@ if extracted_data:
                 
             col_p1, col_p2, col_p3 = st.columns(3)
             with col_p1:
-                def_sales = extracted_data[selected_year].get("Net_Sales", 100e9) * 1.15
+                raw_sales_val = extracted_data[selected_year].get("Net_Sales", 100e9) or 100e9
+                try:
+                    raw_sales_val = float(raw_sales_val) * 1.15
+                except (ValueError, TypeError):
+                    raw_sales_val = 100e9
+                saved_sales_plan = st.session_state.get(f"underwriting_sales_plan_{main_ticker}", raw_sales_val)
+                try:
+                    val_sales = float(saved_sales_plan)
+                except (ValueError, TypeError):
+                    val_sales = 100e9
+                val_sales = max(0.0, min(1e16, val_sales))
                 uw_sales_plan = st.number_input(
                     "Doanh thu thuần năm kế hoạch (VND):",
-                    min_value=1e9,
-                    max_value=1e13,
-                    value=float(st.session_state.get(f"underwriting_sales_plan_{main_ticker}", def_sales)),
+                    min_value=0.0,
+                    max_value=1e16,
+                    value=val_sales,
                     step=5e9,
                     format="%f",
                     help="Doanh thu kế hoạch của doanh nghiệp dùng để tính quy mô nhu cầu vốn lưu động",
@@ -6087,11 +6326,22 @@ if extracted_data:
                 wc_temp = cue.calculate_working_capital_need(
                     extracted_data, selected_year, custom_planned_sales=uw_sales_plan, equity_contribution_pct=uw_eq_pct
                 )
+                rec_lim = wc_temp.get("recommended_credit_limit", 10e9) or 10e9
+                try:
+                    rec_lim = float(rec_lim)
+                except (ValueError, TypeError):
+                    rec_lim = 10e9
+                saved_lim = st.session_state.get(f"underwriting_branch_limit_{main_ticker}", rec_lim)
+                try:
+                    val_branch_lim = float(saved_lim)
+                except (ValueError, TypeError):
+                    val_branch_lim = 10e9
+                val_branch_lim = max(0.0, min(1e16, val_branch_lim))
                 uw_branch_limit = st.number_input(
                     "Hạn mức ĐVKD (Chi nhánh) đề xuất cấp (VND):",
-                    min_value=1e9,
-                    max_value=1e13,
-                    value=float(st.session_state.get(f"underwriting_branch_limit_{main_ticker}", wc_temp["recommended_credit_limit"])),
+                    min_value=0.0,
+                    max_value=1e16,
+                    value=val_branch_lim,
                     step=5e9,
                     format="%f",
                     help="Hạn mức tín dụng mà Chi nhánh trình lên Khối Thẩm định",
@@ -6152,10 +6402,15 @@ if extracted_data:
                 )
                 st.session_state[f"sector_rev_pct_{main_ticker}"] = sector_revenue_pct
 
+                raw_cycle = st.session_state.get(f"biz_cycle_{main_ticker}", bench["dsi_max"] + bench["dso_max"] - bench["dpo_min"])
+                try:
+                    val_cycle = int(max(15, min(365, int(raw_cycle))))
+                except (ValueError, TypeError):
+                    val_cycle = 90
                 estimated_biz_cycle = st.number_input(
                     "Kỳ kinh doanh ước tính (ngày):",
                     min_value=15, max_value=365,
-                    value=st.session_state.get(f"biz_cycle_{main_ticker}", bench["dsi_max"] + bench["dso_max"] - bench["dpo_min"]),
+                    value=val_cycle,
                     step=5,
                     key=f"biz_cycle_inp_{main_ticker}",
                     help=f"Chu kỳ kinh doanh thực tế DN khai báo. Chuẩn ngành '{bench['label']}': {bench['dsi_min']+bench['dso_min']} - {bench['dsi_max']+bench['dso_max']} ngày."
@@ -6882,20 +7137,42 @@ if extracted_data:
                 s_str = str(s).strip()
                 if not s_str:
                     return default
-                # Loại bỏ ký tự đ, VND, khoảng trắng
-                s_str = re.sub(r'[đĐvVnNdD\s]', '', s_str)
+                # Nhận diện số âm kế toán: trong ngoặc đơn (ví dụ: (3.082.896.479)), dấu trừ đầu/đuôi hoặc dấu gạch ngang unicode
+                is_negative = False
+                if ("(" in s_str and ")" in s_str) or any(s_str.startswith(p) or s_str.endswith(p) for p in ["-", "—", "–", "−"]):
+                    is_negative = True
+                # Loại bỏ ký tự đ, VND, khoảng trắng, dấu ngoặc và các loại dấu trừ
+                s_str = re.sub(r'[đĐvVnNdD\s\(\)]', '', s_str)
+                s_str = s_str.replace("—", "").replace("–", "").replace("−", "").replace("-", "")
+                
                 # Xử lý dấu phân cách hàng nghìn kiểu Việt Nam (ví dụ 931.789.767.539 hoặc 931.789.767.539,00)
-                if s_str.count(".") > 1 or (s_str.count(".") >= 1 and s_str.count(",") >= 1):
-                    s_str = s_str.replace(".", "").replace(",", ".")
+                if s_str.count(".") > 1:
+                    s_str = s_str.replace(".", "")
+                    if s_str.count(",") == 1:
+                        s_str = s_str.replace(",", ".")
                 elif s_str.count(",") > 1:
                     s_str = s_str.replace(",", "")
+                elif s_str.count(".") == 1 and s_str.count(",") == 1:
+                    if s_str.find(".") < s_str.find(","):
+                        s_str = s_str.replace(".", "").replace(",", ".")
+                    else:
+                        s_str = s_str.replace(",", "")
                 elif s_str.count(".") == 1:
                     parts = s_str.split(".")
-                    if len(parts[1]) == 3 and len(parts[0]) >= 1 and not s_str.startswith("0."):
+                    if len(parts[1]) == 3 and parts[0] not in ["0", "+0"]:
                         s_str = s_str.replace(".", "")
+                elif s_str.count(",") == 1:
+                    parts = s_str.split(",")
+                    if len(parts[1]) == 3 and parts[0] not in ["0", "+0"]:
+                        s_str = s_str.replace(",", "")
+                    else:
+                        s_str = s_str.replace(",", ".")
                 try:
-                    cleaned = re.sub(r'[^0-9\-.]', '', s_str)
-                    return float(cleaned) if cleaned else default
+                    cleaned = re.sub(r'[^0-9.]', '', s_str)
+                    val = float(cleaned) if cleaned and cleaned != "." else default
+                    if is_negative and val > 0:
+                        val = -val
+                    return val
                 except Exception:
                     return default
 
@@ -6923,8 +7200,9 @@ if extracted_data:
                 if st.button(f"🔄 Khôi phục số gốc riêng Năm {edit_year}", use_container_width=True, help=f"Chỉ hoàn tác các chỉnh sửa của năm {edit_year}, giữ nguyên các năm khác"):
                     if "manual_overrides" in st.session_state and edit_year in st.session_state["manual_overrides"]:
                         del st.session_state["manual_overrides"][edit_year]
+                        save_manual_overrides_to_storage(main_ticker, st.session_state["manual_overrides"])
                     # Xóa các widget keys của năm này để Streamlit nạp lại dữ liệu gốc từ BCTC (Khắc phục Slide 19 CAT)
-                    for kp in ["e_ta_", "e_ca_", "e_fa_", "e_cash_", "e_rec130_", "e_rec131_", "e_inv_", "e_liab_", "e_cl_", "e_pay311_", "e_eq_", "e_re_", "e_borrow_", "e_sales_", "e_cogs_", "e_gp_", "e_ebt_", "e_ni_", "e_ocf_"]:
+                    for kp in ["e_ta_", "e_ca_", "e_fa_", "e_cash_", "e_rec130_", "e_rec131_", "e_inv_", "e_liab_", "e_cl_", "e_pay311_", "e_eq_", "e_re_", "e_borrow_", "e_sales_", "e_cogs_", "e_gp_", "e_int_", "e_sell_", "e_ga_", "e_ebt_", "e_ni_", "e_ocf_"]:
                         st.session_state.pop(f"{kp}{edit_year}", None)
                     st.success(f"✅ Đã khôi phục số liệu gốc ban đầu cho năm {edit_year}!")
                     st.rerun()
@@ -6932,8 +7210,9 @@ if extracted_data:
             with c_btn3:
                 if st.button("⚠️ Khôi phục TẤT CẢ các năm", use_container_width=True, help="Hoàn tác chỉnh sửa của toàn bộ các năm"):
                     st.session_state["manual_overrides"] = {}
+                    save_manual_overrides_to_storage(main_ticker, {})
                     for k in list(st.session_state.keys()):
-                        if any(k.startswith(p) for p in ["e_ta_", "e_ca_", "e_fa_", "e_cash_", "e_rec130_", "e_rec131_", "e_inv_", "e_liab_", "e_cl_", "e_pay311_", "e_eq_", "e_re_", "e_borrow_", "e_sales_", "e_cogs_", "e_gp_", "e_ebt_", "e_ni_", "e_ocf_"]):
+                        if any(k.startswith(p) for p in ["e_ta_", "e_ca_", "e_fa_", "e_cash_", "e_rec130_", "e_rec131_", "e_inv_", "e_liab_", "e_cl_", "e_pay311_", "e_eq_", "e_re_", "e_borrow_", "e_sales_", "e_cogs_", "e_gp_", "e_int_", "e_sell_", "e_ga_", "e_ebt_", "e_ni_", "e_ocf_"]):
                             del st.session_state[k]
                     st.info("Đã khôi phục toàn bộ số liệu trích xuất ban đầu của tất cả các năm.")
                     st.rerun()
@@ -6982,6 +7261,12 @@ if extracted_data:
                 edit_cogs_s = st.text_input("Giá vốn hàng bán [11]", value=_fmt_vnd_edit(v_cogs), key=f"e_cogs_{edit_year}")
                 v_gp = curr_y_data.get("Gross_Profit", 0.0) or (v_sales - v_cogs)
                 edit_gp_s = st.text_input("Lợi nhuận gộp [20]", value=_fmt_vnd_edit(v_gp), key=f"e_gp_{edit_year}")
+                v_interest = curr_y_data.get("Interest_Expense", 0.0) or 0.0
+                edit_interest_s = st.text_input("Chi phí lãi vay [23]", value=_fmt_vnd_edit(v_interest), key=f"e_int_{edit_year}", help="Dùng để tính EBIT trong Altman Z'-Score và hệ số bao phủ lãi vay ICR")
+                v_selling = curr_y_data.get("Selling_Expense", 0.0) or 0.0
+                edit_selling_s = st.text_input("Chi phí bán hàng [25]", value=_fmt_vnd_edit(v_selling), key=f"e_sell_{edit_year}", help="Dùng để tính tỷ lệ chi phí bán hàng và chỉ số SGAI trong Beneish M-Score")
+                v_ga = curr_y_data.get("GA_Expense", 0.0) or 0.0
+                edit_ga_s = st.text_input("Chi phí quản lý doanh nghiệp [26]", value=_fmt_vnd_edit(v_ga), key=f"e_ga_{edit_year}")
                 v_ebt = curr_y_data.get("EBT", 0.0) or 0.0
                 edit_ebt_s = st.text_input("Lợi nhuận trước thuế EBT [50]", value=_fmt_vnd_edit(v_ebt), key=f"e_ebt_{edit_year}")
                 v_ni = curr_y_data.get("Net_Income", 0.0) or 0.0
@@ -7011,6 +7296,9 @@ if extracted_data:
                 edit_sales = _parse_vnd_edit(edit_sales_s)
                 edit_cogs = _parse_vnd_edit(edit_cogs_s)
                 edit_gp = _parse_vnd_edit(edit_gp_s)
+                edit_interest = _parse_vnd_edit(edit_interest_s)
+                edit_selling = _parse_vnd_edit(edit_selling_s)
+                edit_ga = _parse_vnd_edit(edit_ga_s)
                 edit_ebt = _parse_vnd_edit(edit_ebt_s)
                 edit_ni = _parse_vnd_edit(edit_ni_s)
                 edit_ocf = _parse_vnd_edit(edit_ocf_s)
@@ -7032,12 +7320,55 @@ if extracted_data:
                     "Net_Sales": edit_sales,
                     "COGS": edit_cogs,
                     "Gross_Profit": edit_gp,
+                    "Interest_Expense": edit_interest,
+                    "Selling_Expense": edit_selling,
+                    "GA_Expense": edit_ga,
                     "EBT": edit_ebt,
                     "Net_Income": edit_ni,
                     "OCF": edit_ocf
                 })
-                st.success(f"✅ Đã lưu chỉnh sửa số liệu năm {edit_year} thành công!")
+                # Cập nhật trực tiếp vào extracted_data
+                if edit_year in extracted_data:
+                    extracted_data[edit_year].update(st.session_state["manual_overrides"][edit_year])
+                # Lưu bền vững vào SQLite và file JSON cache
+                save_manual_overrides_to_storage(main_ticker, st.session_state["manual_overrides"])
+                save_to_db(main_ticker, summary_company_name, extracted_data)
+                load_from_db_cached.clear()
+                st.success(f"✅ Đã lưu chỉnh sửa số liệu năm {edit_year} và đồng bộ bền vững vào hệ thống (không bị mất khi tải lại trang web)!")
                 st.rerun()
+
+        # Kho Lưu Trữ Tài Liệu & File BCTC Gốc Đã Tải Lên (Khắc phục phản ánh lưu trữ BCTC)
+        st.markdown("---")
+        st.markdown(f"#### 📁 Kho Lưu Trữ Tài Liệu BCTC Gốc: **{main_ticker}**")
+        st.caption("Các tệp BCTC gốc (PDF / Excel) đã tải lên được hệ thống lưu trữ vĩnh viễn và liên kết trực tiếp với hồ sơ doanh nghiệp phục vụ kiểm toán và truy vết:")
+        stored_bctc_files = get_uploaded_bctc_files(main_ticker)
+        if stored_bctc_files:
+            c_f_cols = st.columns([3.5, 1.5, 2, 2])
+            c_f_cols[0].markdown("**Tên Tệp Tin BCTC**")
+            c_f_cols[1].markdown("**Dung lượng**")
+            c_f_cols[2].markdown("**Thời gian Lưu trữ**")
+            c_f_cols[3].markdown("**Tải xuống / Xem lại**")
+            for f_info in stored_bctc_files:
+                col_f1, col_f2, col_f3, col_f4 = st.columns([3.5, 1.5, 2, 2])
+                col_f1.write(f"📄 `{f_info['filename']}`")
+                sz_kb = f_info['file_size'] / 1024
+                sz_str = f"{sz_kb:,.1f} KB" if sz_kb < 1024 else f"{sz_kb/1024:,.2f} MB"
+                col_f2.write(sz_str)
+                col_f3.write(str(f_info['uploaded_at'])[:19])
+                try:
+                    with open(f_info['file_path'], "rb") as f_down:
+                        f_bytes = f_down.read()
+                    col_f4.download_button(
+                        label="⬇️ Tải file gốc",
+                        data=f_bytes,
+                        file_name=f_info['filename'],
+                        key=f"down_tab8_{main_ticker}_{f_info['filename']}",
+                        use_container_width=True
+                    )
+                except Exception:
+                    col_f4.write("—")
+        else:
+            st.info(f"Chưa có tệp BCTC gốc nào trong kho lưu trữ của mã {main_ticker}. Khi người dùng tải file BCTC qua thanh công cụ, hệ thống sẽ tự động lưu trữ vĩnh viễn.")
 
 
     # ------------------ TAB 8: FORMULAS AND CALCULATIONS ------------------
@@ -7071,7 +7402,11 @@ if extracted_data:
         sa_data = y_ews.get("SA_Index", None)
         if sa_data:
             st.markdown(f"- **Quy mô tài sản chuẩn hóa (Size)**: $ln(Total\\_Assets \\; in \\; M.USD) = {sa_data['size_used']:.4f}$ (Quy đổi theo tỷ giá 25,000 VND/USD)")
-            st.markdown(f"- **Tuổi doanh nghiệp (Age)**: {sa_data['age_used']:.0f} năm")
+            age_actual = firm_age_input
+            if sa_data['age_used'] == 37 and age_actual > 37:
+                st.markdown(f"- **Tuổi doanh nghiệp (Age)**: **{sa_data['age_used']:.0f} năm** *(Chuẩn hóa chặn trần ở 37 năm theo mô hình học thuật gốc Hadlock & Pierce, 2010; tuổi doanh nghiệp thực tế khai báo: {age_actual} năm)*")
+            else:
+                st.markdown(f"- **Tuổi doanh nghiệp (Age)**: {sa_data['age_used']:.0f} năm")
             st.markdown(f"**Kết quả tính toán**: $SA = {sa_data['score']:.4f}$")
         else:
             st.warning("Thiếu chỉ tiêu Tổng tài sản để tính SA Index.")
