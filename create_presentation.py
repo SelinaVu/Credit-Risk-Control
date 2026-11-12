@@ -47,7 +47,7 @@ def build_deck():
         tf_title.word_wrap = True
         p_title = tf_title.paragraphs[0]
         p_title.text = title_text
-        p_title.font.size = Pt(22)
+        p_title.font.size = Pt(21)
         p_title.font.bold = True
         p_title.font.color.rgb = COLOR_WHITE
 
@@ -79,7 +79,6 @@ def build_deck():
     bg1.fill.fore_color.rgb = COLOR_PRIMARY_DARK
     bg1.line.fill.background()
 
-    # Title box
     tbox = slide1.shapes.add_textbox(Inches(1.2), Inches(1.5), Inches(10.9), Inches(3.0))
     tf1 = tbox.text_frame
     tf1.word_wrap = True
@@ -103,7 +102,6 @@ def build_deck():
     p2.font.size = Pt(15)
     p2.font.color.rgb = RGBColor(200, 215, 235)
 
-    # Info card at bottom
     c1 = create_card(slide1, Inches(1.2), Inches(5.0), Inches(10.9), Inches(1.6), bg_color=RGBColor(24, 58, 107), border_color=COLOR_ACCENT_GOLD)
     info_box = slide1.shapes.add_textbox(Inches(1.5), Inches(5.1), Inches(10.3), Inches(1.4))
     itf = info_box.text_frame
@@ -168,13 +166,89 @@ def build_deck():
             p_b.space_after = Pt(8)
 
     # =========================================================================
-    # SLIDE 3: CƠ SỞ KHOA HỌC & HỆ THỐNG MÔ HÌNH EWS (TRẢ LỜI THẦY CÔ)
+    # SLIDE 3 (MỚI): BỨC TRANH TOÀN CẢNH - 6 TRỤ CỘT TÍNH NĂNG TOÀN DIỆN CỦA FINTRUST
     # =========================================================================
-    slide3 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide3, "2. Cơ sở Khoa học: Hệ thống 10 Chỉ số Cảnh báo Sớm EWS Định lượng")
+    slide3_feat = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide3_feat, "2. Bức tranh Toàn cảnh: 6 Trụ cột Tính năng Toàn diện của Hệ thống FinTrust EWS")
 
-    create_card(slide3, Inches(0.8), Inches(1.5), Inches(5.7), Inches(5.2))
-    tb_left = slide3.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.3), Inches(4.8))
+    pillars = [
+        ("1. SMART INGESTION & BẢO TOÀN BCTC", "Tiếp nhận & Cân đối Đa tầng", [
+            "Đa định dạng: Đọc PDF văn bản, PDF scan ảnh OCR (Tesseract), Excel (.xlsx, .xls).",
+            "Bộ giải Tự cân bằng TT200: Tự động bù đắp Tổng TS = Nợ + Vốn, LN gộp = DTT - GVHB.",
+            "Khử nhiễu OCR: Tách mã dính số (300.665...), lọc Thuyết minh, hiểu số âm ngoặc đơn ( ).",
+            "Kho BCTC gốc: Tự động lưu file vật lý & SQLite, tải lại file gốc trực tiếp từ giao diện."
+        ]),
+        ("2. GIÁM SÁT CẢNH BÁO SỚM EWS (10 CHỈ SỐ)", "Early Warning System Quốc tế", [
+            "Kiệt quệ tài chính: Altman Z'-Score tối ưu cho DN tư nhân & Thị trường mới nổi.",
+            "Phát hiện thao túng BCTC: Beneish M-Score (8 biến) & Dechow F-Score gian lận.",
+            "Hạn chế tài chính: SA Index (Hadlock-Pierce 2010, chuẩn hóa chặn trần 37 năm).",
+            "Dị biệt dòng tiền: Roychowdhury 2006 (Ab_CFO, Ab_PROD, Ab_DISEXP) & Xếp hạng AAA->D."
+        ]),
+        ("3. ĐỘNG CƠ THẨM ĐỊNH CẤP VỐN 4 MODULE", "Credit Underwriting Engine", [
+            "Module A: Bóc tách doanh thu & chu kỳ riêng theo đúng mục đích vay của DN đa ngành.",
+            "Module B: Phân tích chu kỳ tiền mặt (DSO, DSI, DPO, CCC) đối chiếu Benchmark ngành.",
+            "Module C: Giám sát an toàn thanh khoản (Quick/Cash Ratio, ICR, Vay/(PT+TK), OCF/NNH).",
+            "Module D: Tự động kết luận Đạt/Không đạt, phân cấp duyệt, tính hạn mức & Smart Covenants."
+        ]),
+        ("4. ĐÁNH GIÁ 5CS & GIÁM SÁT SAU GIẢI NGÂN", "Quản trị Rủi ro Tín dụng Khép kín", [
+            "Khung 5Cs toàn diện: Character, Capacity, Capital, Collateral, Conditions chuẩn hóa.",
+            "Ma trận Hệ sinh thái: Đánh giá quan hệ bên liên quan, phát hiện sở hữu chéo/chuyển giá.",
+            "Giám sát sau giải ngân: So sánh dòng tiền ghi có trên sao kê / Doanh thu thực tế.",
+            "Phát hiện rút ruột vốn: Cảnh báo sớm dấu hiệu dòng tiền vay bị đảo nợ hoặc dùng sai mục đích."
+        ]),
+        ("5. STRESS TESTING & CẤU TRÚC VỐN TỐI ƯU", "Mô phỏng Kịch bản Khủng hoảng", [
+            "Mô phỏng đa biến số: Lãi suất tăng (+1% đến +5%), Doanh thu sụt giảm (-10% đến -40%).",
+            "Đo lường độ nhạy ICR: Đánh giá khả năng bù đắp nghĩa vụ nợ khi biên lợi nhuận bị bào mòn.",
+            "Hồi quy Chữ U (U-Curve): Tái ước lượng đòn bẩy tối ưu định kỳ dựa trên 1.441 DN niêm yết.",
+            "Xác định điểm cận biên: Tìm ngưỡng nợ tối ưu giúp tối đa hóa giá trị doanh nghiệp."
+        ]),
+        ("6. BÁO CÁO THẨM ĐỊNH PDF & MINH BẠCH AI", "Explainable AI & Audit Trail", [
+            "Xuất Tờ trình PDF chuẩn NHTM: Tự động tạo bản Memo 10 trụ cột kèm đồ thị và chữ ký số.",
+            "Minh bạch hóa 100% công thức: Tab 9 giải trình chi tiết từng phép tính trung gian (Glass-box).",
+            "Bộ câu hỏi chất vấn: Tự động đề xuất các câu hỏi rủi ro cốt lõi để CBTD phỏng vấn Giám đốc.",
+            "Bảo toàn dữ liệu tuyệt đối: Lưu trữ SQLite + JSON, không mất số liệu khi reload F5."
+        ])
+    ]
+
+    for idx, (title, subtitle, bullets) in enumerate(pillars):
+        col = idx % 3
+        row = idx // 3
+        left = Inches(0.8 + col * 4.0)
+        top = Inches(1.45 + row * 2.75)
+        create_card(slide3_feat, left, top, Inches(3.733), Inches(2.6), bg_color=COLOR_CARD_BG, border_color=COLOR_PRIMARY_BLUE)
+        
+        tb = slide3_feat.shapes.add_textbox(left + Inches(0.15), top + Inches(0.1), Inches(3.433), Inches(2.4))
+        tf = tb.text_frame
+        tf.word_wrap = True
+        
+        p_t = tf.paragraphs[0]
+        p_t.text = title
+        p_t.font.size = Pt(11)
+        p_t.font.bold = True
+        p_t.font.color.rgb = COLOR_PRIMARY_DARK
+        
+        p_sub = tf.add_paragraph()
+        p_sub.text = subtitle
+        p_sub.font.size = Pt(9.5)
+        p_sub.font.bold = True
+        p_sub.font.color.rgb = COLOR_PRIMARY_BLUE
+        p_sub.space_after = Pt(4)
+
+        for b in bullets:
+            p_b = tf.add_paragraph()
+            p_b.text = f"• {b}"
+            p_b.font.size = Pt(9.0)
+            p_b.font.color.rgb = COLOR_TEXT_DARK
+            p_b.space_after = Pt(2)
+
+    # =========================================================================
+    # SLIDE 4: CƠ SỞ KHOA HỌC & HỆ THỐNG MÔ HÌNH EWS (TRẢ LỜI THẦY CÔ)
+    # =========================================================================
+    slide4 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide4, "3. Cơ sở Khoa học: Hệ thống 10 Chỉ số Cảnh báo Sớm EWS Định lượng")
+
+    create_card(slide4, Inches(0.8), Inches(1.5), Inches(5.7), Inches(5.2))
+    tb_left = slide4.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.3), Inches(4.8))
     tfl = tb_left.text_frame
     tfl.word_wrap = True
 
@@ -203,8 +277,8 @@ def build_deck():
         pm_d.font.color.rgb = COLOR_TEXT_DARK
         pm_d.space_after = Pt(6)
 
-    create_card(slide3, Inches(6.8), Inches(1.5), Inches(5.7), Inches(5.2))
-    tb_right = slide3.shapes.add_textbox(Inches(7.0), Inches(1.7), Inches(5.3), Inches(4.8))
+    create_card(slide4, Inches(6.8), Inches(1.5), Inches(5.7), Inches(5.2))
+    tb_right = slide4.shapes.add_textbox(Inches(7.0), Inches(1.7), Inches(5.3), Inches(4.8))
     tfr = tb_right.text_frame
     tfr.word_wrap = True
 
@@ -234,10 +308,10 @@ def build_deck():
         pr_d.space_after = Pt(6)
 
     # =========================================================================
-    # SLIDE 4: GIẢI ĐÁP CÁC CÂU HỎI THẮC MẮC CỦA THẦY CÔ & HỘI ĐỒNG (FAQ)
+    # SLIDE 5: GIẢI ĐÁP CÁC CÂU HỎI THẮC MẮC CỦA THẦY CÔ & HỘI ĐỒNG (FAQ)
     # =========================================================================
-    slide4 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide4, "3. Giải đáp Thắc mắc Chuyên sâu của Hội đồng & Giảng viên (Technical FAQ)")
+    slide5 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide5, "4. Giải đáp Thắc mắc Chuyên sâu của Hội đồng & Giảng viên (Technical FAQ)")
 
     faqs = [
         ("❓ Câu hỏi 1: Vì sao mô hình SA Index lại chặn trần tuổi doanh nghiệp tối đa ở mức 37 năm?",
@@ -255,8 +329,8 @@ def build_deck():
 
     for idx, (q, head, a) in enumerate(faqs):
         top = Inches(1.5 + idx * 1.8)
-        create_card(slide4, Inches(0.8), top, Inches(11.733), Inches(1.65))
-        tb = slide4.shapes.add_textbox(Inches(1.0), top + Inches(0.1), Inches(11.333), Inches(1.45))
+        create_card(slide5, Inches(0.8), top, Inches(11.733), Inches(1.65))
+        tb = slide5.shapes.add_textbox(Inches(1.0), top + Inches(0.1), Inches(11.333), Inches(1.45))
         tf = tb.text_frame
         tf.word_wrap = True
         
@@ -272,12 +346,12 @@ def build_deck():
         pa.font.color.rgb = COLOR_TEXT_DARK
 
     # =========================================================================
-    # SLIDE 5: CÔNG NGHỆ BÓC TÁCH OCR & BỘ GIẢI TỰ CÂN ĐỐI KẾ TOÁN
+    # SLIDE 6: CÔNG NGHỆ BÓC TÁCH OCR & BỘ GIẢI TỰ CÂN ĐỐI KẾ TOÁN
     # =========================================================================
-    slide5 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide5, "4. Đột phá Công nghệ: Bộ giải Tự cân đối Kế toán & Khử nhiễu Đa tầng")
+    slide6 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide6, "5. Đột phá Công nghệ: Bộ giải Tự cân đối Kế toán & Khử nhiễu Đa tầng")
 
-    cards_data_s5 = [
+    cards_data_s6 = [
         ("LỚP 1: KHỬ NHIỄU OCR ĐA TẦNG", "Xử lý triệt để lỗi scan", [
             "Tách mã chỉ tiêu dính số: Tự động bóc tách tiền tố (vd '300.665.242.118.219' -> Mã 300 & Số tiền 665 tỷ).",
             "Lọc bỏ số Thuyết minh: Nhận diện cột thuyết minh (Note 19, 23, 25) để không nhận nhầm thành số dư phát sinh.",
@@ -298,10 +372,10 @@ def build_deck():
         ])
     ]
 
-    for idx, (title, subtitle, bullets) in enumerate(cards_data_s5):
+    for idx, (title, subtitle, bullets) in enumerate(cards_data_s6):
         left = Inches(0.8 + idx * 4.0)
-        create_card(slide5, left, Inches(1.5), Inches(3.733), Inches(5.2))
-        tb = slide5.shapes.add_textbox(left + Inches(0.2), Inches(1.7), Inches(3.333), Inches(4.8))
+        create_card(slide6, left, Inches(1.5), Inches(3.733), Inches(5.2))
+        tb = slide6.shapes.add_textbox(left + Inches(0.2), Inches(1.7), Inches(3.333), Inches(4.8))
         tf = tb.text_frame
         tf.word_wrap = True
         p_t = tf.paragraphs[0]
@@ -325,18 +399,17 @@ def build_deck():
             p_b.space_after = Pt(8)
 
     # =========================================================================
-    # SLIDE 6: GIẢI PHÁP LƯU TRỮ HỒ SƠ & BCTC GỐC (DATA PERSISTENCE)
+    # SLIDE 7: GIẢI PHÁP LƯU TRỮ HỒ SƠ & BCTC GỐC (DATA PERSISTENCE)
     # =========================================================================
-    slide6 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide6, "5. Giải pháp Lưu trữ BCTC Gốc & Bảo toàn Dữ liệu Hiệu chỉnh (Data Persistence)")
+    slide7 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide7, "6. Giải pháp Lưu trữ BCTC Gốc & Bảo toàn Dữ liệu Hiệu chỉnh (Data Persistence)")
 
-    # 2 Big Cards
-    create_card(slide6, Inches(0.8), Inches(1.5), Inches(5.7), Inches(5.2))
-    tb6_1 = slide6.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.3), Inches(4.8))
-    tf6_1 = tb6_1.text_frame
-    tf6_1.word_wrap = True
+    create_card(slide7, Inches(0.8), Inches(1.5), Inches(5.7), Inches(5.2))
+    tb7_1 = slide7.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.3), Inches(4.8))
+    tf7_1 = tb7_1.text_frame
+    tf7_1.word_wrap = True
 
-    p = tf6_1.paragraphs[0]
+    p = tf7_1.paragraphs[0]
     p.text = "📁 KHO LƯU TRỮ TÀI LIỆU BCTC GỐC VĨNH VIỄN"
     p.font.size = Pt(13)
     p.font.bold = True
@@ -349,23 +422,23 @@ def build_deck():
         ("Đối soát Chứng từ Kiểm toán:", "Cho phép thanh tra hoặc kiểm toán nội bộ đối chiếu tức thì giữa con số trong Tờ trình thẩm định với chữ ký trên bản BCTC gốc.")
     ]
     for h, d in points_p1:
-        ph = tf6_1.add_paragraph()
+        ph = tf7_1.add_paragraph()
         ph.text = f"▶ {h}"
         ph.font.size = Pt(11)
         ph.font.bold = True
         ph.font.color.rgb = COLOR_PRIMARY_BLUE
-        pd_ = tf6_1.add_paragraph()
+        pd_ = tf7_1.add_paragraph()
         pd_.text = f"   {d}"
         pd_.font.size = Pt(10)
         pd_.font.color.rgb = COLOR_TEXT_DARK
         pd_.space_after = Pt(6)
 
-    create_card(slide6, Inches(6.8), Inches(1.5), Inches(5.7), Inches(5.2))
-    tb6_2 = slide6.shapes.add_textbox(Inches(7.0), Inches(1.7), Inches(5.3), Inches(4.8))
-    tf6_2 = tb6_2.text_frame
-    tf6_2.word_wrap = True
+    create_card(slide7, Inches(6.8), Inches(1.5), Inches(5.7), Inches(5.2))
+    tb7_2 = slide7.shapes.add_textbox(Inches(7.0), Inches(1.7), Inches(5.3), Inches(4.8))
+    tf7_2 = tb7_2.text_frame
+    tf7_2.word_wrap = True
 
-    p = tf6_2.paragraphs[0]
+    p = tf7_2.paragraphs[0]
     p.text = "💾 BẢO TOÀN SỐ LIỆU HIỆU CHỈNH KHI RELOAD / F5"
     p.font.size = Pt(13)
     p.font.bold = True
@@ -378,22 +451,22 @@ def build_deck():
         ("Lịch sử khôi phục linh hoạt:", "Chuyên viên có thể chủ động 'Khôi phục số gốc riêng từng năm' hoặc 'Khôi phục tất cả các năm' khi muốn kiểm tra lại bản quét ban đầu.")
     ]
     for h, d in points_p2:
-        ph = tf6_2.add_paragraph()
+        ph = tf7_2.add_paragraph()
         ph.text = f"▶ {h}"
         ph.font.size = Pt(11)
         ph.font.bold = True
         ph.font.color.rgb = COLOR_PRIMARY_BLUE
-        pd_ = tf6_2.add_paragraph()
+        pd_ = tf7_2.add_paragraph()
         pd_.text = f"   {d}"
         pd_.font.size = Pt(10)
         pd_.font.color.rgb = COLOR_TEXT_DARK
         pd_.space_after = Pt(6)
 
     # =========================================================================
-    # SLIDE 7: ĐỘNG CƠ THẨM ĐỊNH TÍN DỤNG 4 MODULE (UNDERWRITING ENGINE)
+    # SLIDE 8: ĐỘNG CƠ THẨM ĐỊNH TÍN DỤNG 4 MODULE (UNDERWRITING ENGINE)
     # =========================================================================
-    slide7 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide7, "6. Động cơ Thẩm định Tín dụng 4 Module Chuyên sâu (Credit Underwriting Engine)")
+    slide8 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide8, "7. Động cơ Thẩm định Tín dụng 4 Module Chuyên sâu (Credit Underwriting Engine)")
 
     mod_data = [
         ("MODULE A: KHAI BÁO LĨNH VỰC", "Bóc tách doanh thu mục đích vay", [
@@ -422,8 +495,8 @@ def build_deck():
 
     for idx, (title, subtitle, bullets) in enumerate(mod_data):
         left = Inches(0.8 + idx * 3.0)
-        create_card(slide7, left, Inches(1.5), Inches(2.78), Inches(5.2))
-        tb = slide7.shapes.add_textbox(left + Inches(0.15), Inches(1.7), Inches(2.48), Inches(4.8))
+        create_card(slide8, left, Inches(1.5), Inches(2.78), Inches(5.2))
+        tb = slide8.shapes.add_textbox(left + Inches(0.15), Inches(1.7), Inches(2.48), Inches(4.8))
         tf = tb.text_frame
         tf.word_wrap = True
         p_t = tf.paragraphs[0]
@@ -447,12 +520,11 @@ def build_deck():
             p_b.space_after = Pt(6)
 
     # =========================================================================
-    # SLIDE 8: DỮ LIỆU THỰC NGHIỆM & KIỂM CHỨNG ĐỘ CHÍNH XÁC (BENCHMARK)
+    # SLIDE 9: DỮ LIỆU THỰC NGHIỆM & KIỂM CHỨNG ĐỘ CHÍNH XÁC (BENCHMARK)
     # =========================================================================
-    slide8 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide8, "7. Dữ liệu Thực nghiệm & Kết quả Kiểm chứng Độ chính xác (Validation Benchmark)")
+    slide9 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide9, "8. Dữ liệu Thực nghiệm & Kết quả Kiểm chứng Độ chính xác (Validation Benchmark)")
 
-    # 3 Stat Cards
     stat_cards = [
         ("5.887+ KỲ BÁO CÁO", "Cơ sở Dữ liệu Big Data", "Tích hợp 1.441 doanh nghiệp niêm yết trên 3 sàn HOSE, HNX, UPCoM phục vụ tính toán phân vị và chuẩn hóa ngành."),
         ("32 BỘ HỒ SƠ KIỂM TOÁN THỰC TẾ", "Đối soát Độc lập Ground-Truth", "Được đối chiếu trực tiếp trên 840 điểm dữ liệu kiểm toán thực tế (HSG, FPT, GVR, APF, ABS, HAG, MCH, VBH...)"),
@@ -461,8 +533,8 @@ def build_deck():
 
     for idx, (st_t, st_sub, st_desc) in enumerate(stat_cards):
         left = Inches(0.8 + idx * 4.0)
-        c = create_card(slide8, left, Inches(1.5), Inches(3.733), Inches(1.7), bg_color=COLOR_PRIMARY_DARK, border_color=COLOR_ACCENT_GOLD)
-        tb = slide8.shapes.add_textbox(left + Inches(0.2), Inches(1.6), Inches(3.333), Inches(1.5))
+        c = create_card(slide9, left, Inches(1.5), Inches(3.733), Inches(1.7), bg_color=COLOR_PRIMARY_DARK, border_color=COLOR_ACCENT_GOLD)
+        tb = slide9.shapes.add_textbox(left + Inches(0.2), Inches(1.6), Inches(3.333), Inches(1.5))
         tf = tb.text_frame
         tf.word_wrap = True
         pt = tf.paragraphs[0]
@@ -480,9 +552,8 @@ def build_deck():
         pd_.font.size = Pt(9.5)
         pd_.font.color.rgb = RGBColor(220, 230, 245)
 
-    # Detailed Comparison Table
-    create_card(slide8, Inches(0.8), Inches(3.4), Inches(11.733), Inches(3.3))
-    tb_table = slide8.shapes.add_textbox(Inches(1.0), Inches(3.5), Inches(11.333), Inches(3.1))
+    create_card(slide9, Inches(0.8), Inches(3.4), Inches(11.733), Inches(3.3))
+    tb_table = slide9.shapes.add_textbox(Inches(1.0), Inches(3.5), Inches(11.333), Inches(3.1))
     tft = tb_table.text_frame
     tft.word_wrap = True
 
@@ -515,10 +586,10 @@ def build_deck():
         pr.space_after = Pt(3)
 
     # =========================================================================
-    # SLIDE 9: KIẾN TRÚC GIAO DIỆN & 11 TAB NGHIỆP VỤ THỰC TẾ
+    # SLIDE 10: KIẾN TRÚC GIAO DIỆN & 11 TAB NGHIỆP VỤ THỰC TẾ
     # =========================================================================
-    slide9 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide9, "8. Kiến trúc Giao diện Người dùng & 11 Tab Nghiệp vụ Khép kín")
+    slide10 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide10, "9. Kiến trúc Giao diện Người dùng & 11 Tab Nghiệp vụ Khép kín")
 
     tabs_info = [
         ("Tab 1: Dashboard & Xếp hạng", "Tổng quan sức khỏe tài chính, Điểm số rủi ro EWS tổng hợp, Thang điểm xếp hạng AAA -> D, Radar Chart đa chiều."),
@@ -539,8 +610,8 @@ def build_deck():
         row = idx % 6
         left = Inches(0.8 + col * 5.9)
         top = Inches(1.5 + row * 0.9)
-        create_card(slide9, left, top, Inches(5.7), Inches(0.82))
-        tb = slide9.shapes.add_textbox(left + Inches(0.15), top + Inches(0.05), Inches(5.4), Inches(0.72))
+        create_card(slide10, left, top, Inches(5.7), Inches(0.82))
+        tb = slide10.shapes.add_textbox(left + Inches(0.15), top + Inches(0.05), Inches(5.4), Inches(0.72))
         tf = tb.text_frame
         tf.word_wrap = True
         pt = tf.paragraphs[0]
@@ -554,17 +625,17 @@ def build_deck():
         pd_.font.color.rgb = COLOR_TEXT_DARK
 
     # =========================================================================
-    # SLIDE 10: MÔ PHỎNG CĂNG THẲNG & XUẤT TỜ TRÌNH PDF CHUẨN NGÂN HÀNG
+    # SLIDE 11: MÔ PHỎNG CĂNG THẲNG & XUẤT TỜ TRÌNH PDF CHUẨN NGÂN HÀNG
     # =========================================================================
-    slide10 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide10, "9. Mô phỏng Kịch bản Căng thẳng & Xuất Báo cáo Tín dụng Tự động")
+    slide11 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide11, "10. Mô phỏng Kịch bản Căng thẳng & Xuất Báo cáo Tín dụng Tự động")
 
-    create_card(slide10, Inches(0.8), Inches(1.5), Inches(5.7), Inches(5.2))
-    tb10_1 = slide10.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.3), Inches(4.8))
-    tf10_1 = tb10_1.text_frame
-    tf10_1.word_wrap = True
+    create_card(slide11, Inches(0.8), Inches(1.5), Inches(5.7), Inches(5.2))
+    tb11_1 = slide11.shapes.add_textbox(Inches(1.0), Inches(1.7), Inches(5.3), Inches(4.8))
+    tf11_1 = tb11_1.text_frame
+    tf11_1.word_wrap = True
 
-    p = tf10_1.paragraphs[0]
+    p = tf11_1.paragraphs[0]
     p.text = "⚡ MÔ PHỎNG CĂNG THẲNG (STRESS TESTING)"
     p.font.size = Pt(13)
     p.font.bold = True
@@ -577,23 +648,23 @@ def build_deck():
         ("Tái ước lượng Đòn bẩy Tối ưu định kỳ:", "Ứng dụng mô hình Hồi quy Chữ U (U-Curve Trade-off Theory) trên dữ liệu ngành để tìm tỷ lệ Nợ/Vốn chủ sở hữu tối ưu, tối đa hóa giá trị doanh nghiệp.")
     ]
     for h, d in st_points:
-        ph = tf10_1.add_paragraph()
+        ph = tf11_1.add_paragraph()
         ph.text = f"▶ {h}"
         ph.font.size = Pt(11)
         ph.font.bold = True
         ph.font.color.rgb = COLOR_PRIMARY_BLUE
-        pd_ = tf10_1.add_paragraph()
+        pd_ = tf11_1.add_paragraph()
         pd_.text = f"   {d}"
         pd_.font.size = Pt(10)
         pd_.font.color.rgb = COLOR_TEXT_DARK
         pd_.space_after = Pt(6)
 
-    create_card(slide10, Inches(6.8), Inches(1.5), Inches(5.7), Inches(5.2))
-    tb10_2 = slide10.shapes.add_textbox(Inches(7.0), Inches(1.7), Inches(5.3), Inches(4.8))
-    tf10_2 = tb10_2.text_frame
-    tf10_2.word_wrap = True
+    create_card(slide11, Inches(6.8), Inches(1.5), Inches(5.7), Inches(5.2))
+    tb11_2 = slide11.shapes.add_textbox(Inches(7.0), Inches(1.7), Inches(5.3), Inches(4.8))
+    tf11_2 = tb11_2.text_frame
+    tf11_2.word_wrap = True
 
-    p = tf10_2.paragraphs[0]
+    p = tf11_2.paragraphs[0]
     p.text = "📑 XUẤT TỜ TRÌNH THẨM ĐỊNH PDF CHUẨN NHTM"
     p.font.size = Pt(13)
     p.font.bold = True
@@ -606,24 +677,24 @@ def build_deck():
         ("Sẵn sàng Trình duyệt Hội đồng:", "Tờ trình kèm đầy đủ đồ thị trực quan, chữ ký số của Chuyên viên thẩm định và Trưởng phòng Thẩm định.")
     ]
     for h, d in pdf_points:
-        ph = tf10_2.add_paragraph()
+        ph = tf11_2.add_paragraph()
         ph.text = f"▶ {h}"
         ph.font.size = Pt(11)
         ph.font.bold = True
         ph.font.color.rgb = COLOR_PRIMARY_BLUE
-        pd_ = tf10_2.add_paragraph()
+        pd_ = tf11_2.add_paragraph()
         pd_.text = f"   {d}"
         pd_.font.size = Pt(10)
         pd_.font.color.rgb = COLOR_TEXT_DARK
         pd_.space_after = Pt(6)
 
     # =========================================================================
-    # SLIDE 11: TỔNG KẾT, ĐÓNG GÓP & HƯỚNG MỞ RỘNG
+    # SLIDE 12: TỔNG KẾT, ĐÓNG GÓP & HƯỚNG MỞ RỘNG
     # =========================================================================
-    slide11 = prs.slides.add_slide(blank_slide_layout)
-    add_header(slide11, "10. Tổng kết Giá trị, Đóng góp của Đề tài & Hướng Phát triển")
+    slide12 = prs.slides.add_slide(blank_slide_layout)
+    add_header(slide12, "11. Tổng kết Giá trị, Đóng góp của Đề tài & Hướng Phát triển")
 
-    cards_data_s11 = [
+    cards_data_s12 = [
         ("ĐÓNG GÓP HỌC THUẬT (ACADEMIC)", "Hệ thống hóa & Thực nghiệm", [
             "Số hóa và kiểm chứng thực nghiệm các mô hình định lượng rủi ro tín dụng hiện đại (Altman, Beneish, Hadlock-Pierce) trên bối cảnh BCTC Việt Nam.",
             "Làm sáng tỏ các giả định lý thuyết: Winorize tuổi 37 ở SA Index, đối chiếu số dư bình quân vs cuối kỳ trong chu kỳ tiền mặt.",
@@ -641,10 +712,10 @@ def build_deck():
         ])
     ]
 
-    for idx, (title, subtitle, bullets) in enumerate(cards_data_s11):
+    for idx, (title, subtitle, bullets) in enumerate(cards_data_s12):
         left = Inches(0.8 + idx * 4.0)
-        create_card(slide11, left, Inches(1.5), Inches(3.733), Inches(5.2))
-        tb = slide11.shapes.add_textbox(left + Inches(0.2), Inches(1.7), Inches(3.333), Inches(4.8))
+        create_card(slide12, left, Inches(1.5), Inches(3.733), Inches(5.2))
+        tb = slide12.shapes.add_textbox(left + Inches(0.2), Inches(1.7), Inches(3.333), Inches(4.8))
         tf = tb.text_frame
         tf.word_wrap = True
         p_t = tf.paragraphs[0]
@@ -668,33 +739,33 @@ def build_deck():
             p_b.space_after = Pt(8)
 
     # =========================================================================
-    # SLIDE 12: KẾT LUẬN & HỎI ĐÁP (Q&A)
+    # SLIDE 13: KẾT LUẬN & HỎI ĐÁP (Q&A)
     # =========================================================================
-    slide12 = prs.slides.add_slide(blank_slide_layout)
-    bg12 = slide12.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(7.5))
-    bg12.fill.solid()
-    bg12.fill.fore_color.rgb = COLOR_PRIMARY_DARK
-    bg12.line.fill.background()
+    slide13 = prs.slides.add_slide(blank_slide_layout)
+    bg13 = slide13.shapes.add_shape(MSO_SHAPE.RECTANGLE, Inches(0), Inches(0), Inches(13.333), Inches(7.5))
+    bg13.fill.solid()
+    bg13.fill.fore_color.rgb = COLOR_PRIMARY_DARK
+    bg13.line.fill.background()
 
-    tb12 = slide12.shapes.add_textbox(Inches(1.5), Inches(1.8), Inches(10.333), Inches(4.0))
-    tf12 = tb12.text_frame
-    tf12.word_wrap = True
+    tb13 = slide13.shapes.add_textbox(Inches(1.5), Inches(1.8), Inches(10.333), Inches(4.0))
+    tf13 = tb13.text_frame
+    tf13.word_wrap = True
 
-    p0 = tf12.paragraphs[0]
+    p0 = tf13.paragraphs[0]
     p0.text = "TRÂN TRỌNG CẢM ƠN HỘI ĐỒNG & CÁC THẦY CÔ!"
     p0.font.size = Pt(28)
     p0.font.bold = True
     p0.font.color.rgb = COLOR_ACCENT_GOLD
     p0.space_after = Pt(20)
 
-    p1 = tf12.add_paragraph()
+    p1 = tf13.add_paragraph()
     p1.text = "HỆ THỐNG FINTRUST EWS ĐÃ SẴN SÀNG CHO PHIÊN CHẤT VẤN & TRẢI NGHIỆM TRỰC TIẾP"
     p1.font.size = Pt(18)
     p1.font.bold = True
     p1.font.color.rgb = COLOR_WHITE
     p1.space_after = Pt(20)
 
-    p2 = tf12.add_paragraph()
+    p2 = tf13.add_paragraph()
     p2.text = "🌐 Trải nghiệm Trực tuyến trên Streamlit Cloud:\n   • https://credit-risk-control.streamlit.app\n\n💻 Mã nguồn Dự án trên GitHub:\n   • https://github.com/SelinaVu/Credit-Risk-Control\n\n📧 Mọi ý kiến phản biện & đóng góp xin gửi về Nhóm Nghiên cứu & Phát triển Đề tài."
     p2.font.size = Pt(14)
     p2.font.color.rgb = RGBColor(210, 225, 245)
@@ -702,7 +773,7 @@ def build_deck():
     # Save presentation
     output_pptx = "FinTrust_EWS_Bao_Cao_Hoi_Dong_Khoa_Hoc.pptx"
     prs.save(output_pptx)
-    print(f"Presentation successfully saved to: {output_pptx}")
+    print(f"Presentation successfully updated and saved to: {output_pptx} (Total {len(prs.slides)} slides)")
 
 if __name__ == "__main__":
     build_deck()
