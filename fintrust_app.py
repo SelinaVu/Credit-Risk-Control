@@ -5219,12 +5219,20 @@ if extracted_data:
             is_bds=is_bds_input
         )
         
+        default_ind_pkg = {
+            "HSG": ("Sản xuất & Bán buôn Tôn thép, VLXD (Mã ngành: 2410)", "GSP Doanh nghiệp Sản xuất & Phân phối Tôn thép / VLXD - Vốn lưu động"),
+            "HPG": ("Sản xuất Thép & Kim loại công nghiệp (Mã ngành: 2410)", "GSP Doanh nghiệp Sản xuất Thép & Kim loại - Vốn lưu động"),
+            "TCO": ("Thương mại Hàng tiêu dùng & Phân phối (Mã ngành: 4632900)", "GSP Nhà phân phối Hàng tiêu dùng - Vốn lưu động")
+        }
+        ind_desc, pkg_desc = default_ind_pkg.get(main_ticker, (f"{industry_input} (Mã ngành: 4632900)", "GSP Doanh nghiệp Vốn lưu động Tổng hợp"))
+
         underwriting_dict = {
-            "branch_name": st.session_state.get(f"underwriting_branch_name_{main_ticker}", "Chi nhánh Tân Bình / TP.HCM"),
-            "tax_code": st.session_state.get(f"underwriting_tax_code_{main_ticker}", "0315315451"),
-            "customer_segment": st.session_state.get(f"underwriting_customer_segment_{main_ticker}", "SME (Doanh thu 100 – 1.000 tỷ đồng)"),
-            "industry_full": st.session_state.get(f"underwriting_industry_full_{main_ticker}", f"{industry_input} (Mã ngành: 4632900)"),
-            "internal_grade": st.session_state.get(f"underwriting_internal_grade_{main_ticker}", "Hạng BBB (Đạt chuẩn)"),
+            "branch_name": st.session_state.get(f"underwriting_branch_name_{main_ticker}", "MSB Quận 7" if main_ticker == "HSG" else "Chi nhánh Tân Bình / TP.HCM"),
+            "tax_code": st.session_state.get(f"underwriting_tax_code_{main_ticker}", "3700381324" if main_ticker == "HSG" else "0315315451"),
+            "customer_segment": st.session_state.get(f"underwriting_customer_segment_{main_ticker}", "Doanh nghiệp Lớn / Corporate (> 1.000 tỷ)" if main_ticker == "HSG" else "SME (Doanh thu 100 – 1.000 tỷ đồng)"),
+            "industry_full": st.session_state.get(f"underwriting_industry_full_{main_ticker}", ind_desc),
+            "product_package": pkg_desc,
+            "internal_grade": st.session_state.get(f"underwriting_internal_grade_{main_ticker}", "Hạng AA" if main_ticker == "HSG" else "Hạng BBB (Đạt chuẩn)"),
             "credit_purpose": st.session_state.get(f"underwriting_credit_purpose_{main_ticker}", "Cấp tín dụng bổ sung vốn lưu động phục vụ sản xuất kinh doanh và tài trợ thương mại."),
             "planned_sales": st.session_state.get(f"underwriting_sales_plan_{main_ticker}"),
             "requested_limit_branch": st.session_state.get(f"underwriting_branch_limit_{main_ticker}", 0.0),
@@ -5426,13 +5434,14 @@ if extracted_data:
         quant_score = calculate_quant_ews_score(res)
         qual_score = res_5cs["total_qual_score"]
         
-        quant_w = st.slider(
+        quant_w_pct = st.slider(
             "Tỷ trọng Định lượng BCTC (EWS) vs Định tính 5Cs:",
-            min_value=0.30, max_value=0.80, value=0.60, step=0.05,
+            min_value=30, max_value=80, value=60, step=5,
             format="%d%% Định lượng",
             help="Chuẩn mực Ngân hàng Thương mại khuyến nghị: 60% Định lượng BCTC + 40% Định tính 5Cs & Hệ sinh thái.",
             key=f"slider_quant_w_{selected_year}"
         )
+        quant_w = quant_w_pct / 100.0
         
         hybrid_res = calculate_hybrid_rating(quant_score, qual_score, quant_weight=quant_w)
         
@@ -5441,7 +5450,7 @@ if extracted_data:
             st.markdown(f"""
             <div style="background-color: {hybrid_res['bg_color']}; border-left: 5px solid {hybrid_res['color']}; padding: 16px; border-radius: 8px;">
                 <p style="margin: 0; color: #4A5568; font-size: 0.82em; font-weight: bold;">ĐIỂM XẾP HẠNG HỖN HỢP</p>
-                <h1 style="margin: 4px 0; color: {hybrid_res['color']}; font-size: 2.1em;">{hybrid_res['hybrid_score']:.1f}<span style="font-size: 0.5em; color: #718096;"> / 100</span></h1>
+                <div style="margin: 4px 0; color: {hybrid_res['color']}; font-size: 2.1em; font-weight: bold; line-height: 1.2;">{hybrid_res['hybrid_score']:.1f}<span style="font-size: 0.5em; color: #718096; font-weight: normal;"> / 100</span></div>
                 <p style="margin: 0; font-weight: bold; color: {hybrid_res['color']}; font-size: 0.9em;">🏆 {hybrid_res['grade']}</p>
             </div>
             """, unsafe_allow_html=True)
@@ -6265,24 +6274,58 @@ if extracted_data:
                 )
                 st.session_state[f"underwriting_branch_name_{main_ticker}"] = uw_branch
             with col_uw2:
+                ticker_tax_defaults = {
+                    "HSG": "3700381324",
+                    "HPG": "0900189284",
+                    "VCB": "0100112437",
+                    "TCB": "0100230800",
+                    "MBB": "0100283873",
+                    "FPT": "0101248141",
+                    "VIC": "0101245486",
+                    "VNM": "0300588569",
+                    "MSN": "0302017040",
+                    "MWG": "0303270608",
+                    "VHM": "0103023679",
+                    "DXG": "0303104342",
+                    "PDR": "0303493756",
+                    "NVL": "0301449938"
+                }
+                default_tax_val = ticker_tax_defaults.get(main_ticker, "3700381324" if main_ticker == "HSG" else "0315315451")
                 uw_mst = st.text_input(
                     "Mã T24 / Mã số thuế:", 
-                    value=st.session_state.get(f"underwriting_tax_code_{main_ticker}", "0315315451"),
+                    value=st.session_state.get(f"underwriting_tax_code_{main_ticker}", default_tax_val),
                     key=f"uw_mst_input_{main_ticker}"
                 )
                 st.session_state[f"underwriting_tax_code_{main_ticker}"] = uw_mst
             with col_uw3:
+                # Tự động gợi ý phân khúc theo quy mô doanh thu thuần từ BCTC
+                latest_sales = extracted_data.get(selected_year, {}).get("Net_Sales", 0) or 0
+                try:
+                    latest_sales = float(latest_sales)
+                except (ValueError, TypeError):
+                    latest_sales = 0
+                seg_list = ["Doanh nghiệp Lớn / Corporate (> 1.000 tỷ)", "SME (Doanh thu 100 – 1.000 tỷ)", "SME Siêu nhỏ (< 100 tỷ)"]
+                default_seg_idx = 0 if latest_sales >= 1000e9 else (1 if latest_sales >= 100e9 else 2)
                 uw_segment = st.selectbox(
                     "Phân khúc Khách hàng:", 
-                    ["SME (Doanh thu 100 – 1.000 tỷ)", "SME Siêu nhỏ (< 100 tỷ)", "Doanh nghiệp Lớn / Corporate (> 1.000 tỷ)"],
+                    seg_list,
+                    index=default_seg_idx,
                     key=f"uw_seg_select_{main_ticker}"
                 )
                 st.session_state[f"underwriting_customer_segment_{main_ticker}"] = uw_segment
             with col_uw4:
+                grade_list = ["Hạng AAA (Tối ưu)", "Hạng AA", "Hạng A", "Hạng BBB (Đạt chuẩn)", "Hạng BB (Theo dõi)", "Hạng B (Rủi ro)", "Hạng CCC (Nguy hiểm)"]
+                # Tự động liên kết hạng tín dụng từ Tab 1 Dashboard
+                calc_grade = hybrid_res.get("grade", "AA") if 'hybrid_res' in locals() and isinstance(hybrid_res, dict) else "AA"
+                default_grade_idx = 1
+                for idx_g, g_text in enumerate(grade_list):
+                    if calc_grade in g_text:
+                        default_grade_idx = idx_g
+                        break
                 uw_grade = st.selectbox(
                     "Xếp hạng Tín dụng Nội bộ:", 
-                    ["Hạng AAA (Tối ưu)", "Hạng AA", "Hạng A", "Hạng BBB (Đạt chuẩn)", "Hạng BB (Theo dõi)", "Hạng B (Rủi ro)", "Hạng CCC (Nguy hiểm)"],
-                    index=3,
+                    grade_list,
+                    index=default_grade_idx,
                     key=f"uw_grade_select_{main_ticker}"
                 )
                 st.session_state[f"underwriting_internal_grade_{main_ticker}"] = uw_grade
@@ -6304,24 +6347,26 @@ if extracted_data:
                     "Doanh thu thuần năm kế hoạch (VND):",
                     min_value=0.0,
                     max_value=1e16,
-                    value=val_sales,
+                    value=float(round(val_sales)),
                     step=5e9,
-                    format="%f",
+                    format="%.0f",
                     help="Doanh thu kế hoạch của doanh nghiệp dùng để tính quy mô nhu cầu vốn lưu động",
                     key=f"uw_sales_plan_input_{main_ticker}"
                 )
                 st.session_state[f"underwriting_sales_plan_{main_ticker}"] = uw_sales_plan
+                st.caption(f"💰 Quy mô: **{uw_sales_plan:,.0f} VND** (~ **{uw_sales_plan / 1e12:,.2f} nghìn tỷ VND**)")
             with col_p2:
-                uw_eq_pct = st.slider(
+                uw_eq_pct_int = st.slider(
                     "Tỷ lệ Vốn tự có tham gia tối thiểu:",
-                    min_value=0.15,
-                    max_value=0.50,
-                    value=0.25,
-                    step=0.05,
+                    min_value=15,
+                    max_value=50,
+                    value=25,
+                    step=5,
                     format="%d%%",
                     help="Quy định của NHTM thường yêu cầu vốn tự có tham gia tối thiểu 20-30%",
                     key=f"uw_eq_pct_slider_{main_ticker}"
                 )
+                uw_eq_pct = uw_eq_pct_int / 100.0
             with col_p3:
                 wc_temp = cue.calculate_working_capital_need(
                     extracted_data, selected_year, custom_planned_sales=uw_sales_plan, equity_contribution_pct=uw_eq_pct
@@ -6341,13 +6386,14 @@ if extracted_data:
                     "Hạn mức ĐVKD (Chi nhánh) đề xuất cấp (VND):",
                     min_value=0.0,
                     max_value=1e16,
-                    value=val_branch_lim,
+                    value=float(round(val_branch_lim)),
                     step=5e9,
-                    format="%f",
+                    format="%.0f",
                     help="Hạn mức tín dụng mà Chi nhánh trình lên Khối Thẩm định",
                     key=f"uw_branch_limit_input_{main_ticker}"
                 )
                 st.session_state[f"underwriting_branch_limit_{main_ticker}"] = uw_branch_limit
+                st.caption(f"💰 Đề xuất: **{uw_branch_limit:,.0f} VND** (~ **{uw_branch_limit / 1e9:,.0f} tỷ VND**)")
 
         # ═══════════════════════════════════════════════════════════════
         # MODULE A: KHAI BÁO HỒ SƠ VAY CÓ CẤU TRÚC THEO LĨNH VỰC KINH DOANH
