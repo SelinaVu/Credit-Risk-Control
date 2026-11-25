@@ -1001,6 +1001,11 @@ def generate_full_credit_appraisal_pdf_bytes(
     story.append(Paragraph("III. ĐÁNH GIÁ NĂNG LỰC KHÁCH HÀNG & MÔ HÌNH ĐỊNH TÍNH 5CS", sec_title_style))
     
     qual_score_val = qual_results.get("total_qual_score", 76.5) if qual_results else 76.5
+    qual_group_scores = (
+        (qual_results.get("group_scores") or qual_results.get("radar_data") or {})
+        if qual_results
+        else {}
+    )
     story.append(Paragraph(f"• <b>Tư cách pháp nhân & Đăng ký kinh doanh:</b> Khách hàng hoạt động hợp pháp theo Luật Doanh nghiệp, người đại diện theo pháp luật có đủ năng lực hành vi dân sự, không phát sinh tranh chấp hoặc vi phạm hành chính.", body_style))
     story.append(Paragraph(f"• <b>Ban điều hành:</b> Đội ngũ quản lý có trên {firm_age} năm kinh nghiệm trong ngành, điều hành ổn định, không có lịch sử nợ xấu cá nhân.", body_style))
     story.append(Paragraph(f"• <b>Thị trường & Chuỗi cung ứng:</b> Mạng lưới đối tác thương mại đa dạng; chính sách thanh toán công nợ mua hàng từ 15-45 ngày và bán hàng từ 30-60 ngày.", body_style))
@@ -1016,31 +1021,31 @@ def generate_full_credit_appraisal_pdf_bytes(
         [
             Paragraph("C1 - Uy tín & Lãnh đạo (Character)", cell_bold),
             Paragraph("20%", cell_center),
-            Paragraph(f"{qual_results.get('group_scores', {}).get('C1', 82.0):.1f} đ" if qual_results else "82.0 đ", cell_center),
+            Paragraph(f"{qual_group_scores.get('C1', 82.0):.1f} đ", cell_center),
             Paragraph("Lãnh đạo uy tín, lịch sử quan hệ tín dụng chuẩn mực, không nợ xấu CIC.", cell_style)
         ],
         [
             Paragraph("C2 - Năng lực Vận hành (Capacity)", cell_bold),
             Paragraph("20%", cell_center),
-            Paragraph(f"{qual_results.get('group_scores', {}).get('C2', 78.0):.1f} đ" if qual_results else "78.0 đ", cell_center),
+            Paragraph(f"{qual_group_scores.get('C2', 78.0):.1f} đ", cell_center),
             Paragraph("Hệ thống quản trị tốt, tỷ lệ hoàn thành kế hoạch doanh thu cao.", cell_style)
         ],
         [
             Paragraph("C3 - BCTC & Kiểm toán (Capital/Audit)", cell_bold),
             Paragraph("25%", cell_center),
-            Paragraph(f"{qual_results.get('group_scores', {}).get('C3', 72.0):.1f} đ" if qual_results else "72.0 đ", cell_center),
+            Paragraph(f"{qual_group_scores.get('C3', 72.0):.1f} đ", cell_center),
             Paragraph("BCTC nộp cơ quan thuế đầy đủ, ý kiến kiểm toán chấp nhận toàn phần.", cell_style)
         ],
         [
             Paragraph("C4 - Ngành & Cạnh tranh (Conditions)", cell_bold),
             Paragraph("15%", cell_center),
-            Paragraph(f"{qual_results.get('group_scores', {}).get('C4', 75.0):.1f} đ" if qual_results else "75.0 đ", cell_center),
+            Paragraph(f"{qual_group_scores.get('C4', 75.0):.1f} đ", cell_center),
             Paragraph("Ngành tiêu dùng thiết yếu ổn định, nhu cầu thị trường tăng trưởng.", cell_style)
         ],
         [
             Paragraph("C5 - Chuỗi Cung ứng & TSBĐ (Collateral)", cell_bold),
             Paragraph("20%", cell_center),
-            Paragraph(f"{qual_results.get('group_scores', {}).get('C5', 80.0):.1f} đ" if qual_results else "80.0 đ", cell_center),
+            Paragraph(f"{qual_group_scores.get('C5', 80.0):.1f} đ", cell_center),
             Paragraph("Tài sản bảo đảm pháp lý rõ ràng, đối tác cung ứng đầu vào uy tín.", cell_style)
         ],
         [

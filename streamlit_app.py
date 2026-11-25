@@ -27,6 +27,7 @@ from src.core.database_cloud import (
     parse_profile_package_json,
     save_company_profile,
 )
+from src.core.pdf_payload import build_step5_pdf_payload
 
 # -------------------------------------------------------------------------
 # CẤU HÌNH TRANG STREAMLIT
@@ -304,6 +305,14 @@ if "underwriting_inputs" not in st.session_state:
 if "last_sync_info" not in st.session_state:
     st.session_state.last_sync_info = ""
 
+if "flash_messages" not in st.session_state:
+    st.session_state.flash_messages = []
+
+
+def _push_flash(level: str, message: str) -> None:
+    """Lưu thông báo vào hàng đợi để hiển thị đầy đủ sau khi st.rerun()."""
+    st.session_state.flash_messages.append((level, message))
+
 
 def calculate_5c_score_summary():
     """Tính tổng điểm định tính 5Cs theo trọng số C1(20%), C2(20%), C3(25%), C4(15%), C5(20%)."""
@@ -443,6 +452,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Hiển thị các thông báo lưu vết / cảnh báo sau khi st.rerun()
+if st.session_state.flash_messages:
+    for _lvl, _msg in st.session_state.flash_messages:
+        if _lvl == "success":
+            st.success(_msg)
+        elif _lvl == "warning":
+            st.warning(_msg)
+        elif _lvl == "error":
+            st.error(_msg)
+        else:
+            st.info(_msg)
+    st.session_state.flash_messages = []
+
 # -------------------------------------------------------------------------
 # COMPANY STRIP BANNER (EMPTY STATE / LOADED STATE)
 # -------------------------------------------------------------------------
@@ -568,7 +590,7 @@ if current_step_idx == 0:
                     )
                     st.session_state.last_sync_info = msg
                     if ok:
-                        st.success(f"✅ Đã bóc tách BCTC & đồng bộ thành công! {msg}")
+                        _push_flash("success", f"✅ Đã bóc tách BCTC & đồng bộ thành công! {msg}")
                     st.rerun()
 
     with col_cloud:
@@ -590,7 +612,7 @@ if current_step_idx == 0:
                     loaded = load_company_profile(picked_saved)
                     if loaded:
                         _apply_loaded_profile(loaded)
-                        st.success(f"✅ Đã nạp hồ sơ **{loaded['company']['name']}** cùng toàn bộ vết sửa tay!")
+                        _push_flash("success", f"✅ Đã nạp hồ sơ **{loaded['company']['name']}** cùng toàn bộ vết sửa tay!")
                         st.rerun()
             else:
                 st.caption("Chưa có hồ sơ nào được lưu trong kho chung. Hãy nạp một hồ sơ mẫu bên dưới rồi bấm Lưu để khởi tạo.")
@@ -611,14 +633,14 @@ if current_step_idx == 0:
                 existing = load_company_profile(c_pick)
                 if existing:
                     _apply_loaded_profile(existing)
-                    st.success(f"✅ Đã nạp phiên bản đã lưu của **{existing['company']['name']}** từ {existing['source']}!")
+                    _push_flash("success", f"✅ Đã nạp phiên bản đã lưu của **{existing['company']['name']}** từ {existing['source']}!")
                 else:
                     st.session_state.profile_loaded = True
                     st.session_state.active_company = copy.deepcopy(sample_options[c_pick])
                     st.session_state.bctc_override_data = copy.deepcopy(DEFAULT_BCTC_OVERRIDE_DATA)
                     st.session_state.qual_criteria_state = copy.deepcopy(DEFAULT_5C_DATA)
                     st.session_state.last_sync_info = "Hồ sơ mẫu khởi tạo (chưa lưu lên Cloud)"
-                    st.success(f"✅ Đã nạp hồ sơ mẫu **{sample_options[c_pick]['name']}**!")
+                    _push_flash("success", f"✅ Đã nạp hồ sơ mẫu **{sample_options[c_pick]['name']}**!")
                 st.rerun()
 
     # Tiện ích Xuất / Nhập Gói Hồ Sơ JSON (dự phòng gửi qua Email / Teams / Zalo)
@@ -653,7 +675,7 @@ if current_step_idx == 0:
                         parsed["source"] = f"Tệp JSON ({json_up.name})"
                         parsed["updated_by"] = parsed.get("exported_by", "Đồng nghiệp")
                         _apply_loaded_profile(parsed)
-                        st.success(f"✅ Đã nạp thành công hồ sơ **{parsed['company']['name']}** từ file JSON!")
+                        _push_flash("success", f"✅ Đã nạp thành công hồ sơ **{parsed['company']['name']}** từ file JSON!")
                         st.rerun()
                     except Exception as exc_json:
                         st.error(f"Không thể đọc tệp JSON: {exc_json}")
@@ -755,11 +777,12 @@ if current_step_idx == 0:
                 )
                 st.session_state.last_sync_info = sync_msg
                 if ok:
-                    st.success(sync_msg)
+                    _push_flash("success", sync_msg)
                 if missing_remarks:
-                    st.warning(
+                    _push_flash(
+                        "warning",
                         "⚠️ Lưu ý Audit Trail: Các khoản mục sau đã sửa tay nhưng chưa điền Remark giải trình: "
-                        + ", ".join(missing_remarks)
+                        + ", ".join(missing_remarks),
                     )
                 st.rerun()
 
@@ -773,7 +796,7 @@ if current_step_idx == 0:
                     if r["Mã Số"] == "200":
                         r["Số Áp Dụng (tỷ VNĐ)"] = tot_assets
                         r["Lý Do Điều Chỉnh (Remark)"] = f"Tự động cân đối theo Tổng Nợ ({liab:,.1f}) + CSH ({eq:,.1f})"
-                st.info(f"⚡ Đã cân đối Tổng Tài sản = {tot_assets:,.1f} tỷ VNĐ (Nợ: {liab:,.1f} + CSH: {eq:,.1f})!")
+                _push_flash("info", f"⚡ Đã cân đối Tổng Tài sản = {tot_assets:,.1f} tỷ VNĐ (Nợ: {liab:,.1f} + CSH: {eq:,.1f})!")
                 st.rerun()
 
         with col_act3:
@@ -781,7 +804,7 @@ if current_step_idx == 0:
                 for r in st.session_state.bctc_override_data:
                     r["Số Áp Dụng (tỷ VNĐ)"] = r["Số Gốc OCR (tỷ VNĐ)"]
                     r["Lý Do Điều Chỉnh (Remark)"] = ""
-                st.warning("🔄 Đã hoàn tác toàn bộ các chỉ tiêu về số liệu gốc OCR ban đầu.")
+                _push_flash("warning", "🔄 Đã hoàn tác toàn bộ các chỉ tiêu về số liệu gốc OCR ban đầu.")
                 st.rerun()
 
         active_overrides = [
@@ -1550,66 +1573,26 @@ elif current_step_idx == 4:
             try:
                 from pdf_report_generator import generate_full_credit_appraisal_pdf_bytes
 
-                # Ánh xạ số liệu đã hiệu chỉnh (nếu có) vào bản trích xuất cho PDF
-                ov_by_code = {r["Mã Số"]: float(r["Số Áp Dụng (tỷ VNĐ)"]) for r in st.session_state.bctc_override_data}
-                mock_extracted = {
-                    2024: {
-                        "Total_Assets": ov_by_code.get("200", 72000.0),
-                        "Equity": ov_by_code.get("400", 37100.0),
-                        "Net_Sales": ov_by_code.get("511", 62800.0),
-                        "COGS": ov_by_code.get("632", 38900.0),
-                        "Current_Assets": 45000.0,
-                        "Current_Liabilities": ov_by_code.get("310", 29400.0),
-                        "Cash_Equivalents": ov_by_code.get("110", 18200.0),
-                        "Current_Receivables": ov_by_code.get("130", 19500.0),
-                        "Inventories": ov_by_code.get("140", 8200.0),
-                        "Short_Term_Borrowings": ov_by_code.get("311", 15200.0),
-                        "Interest_Expenses": ov_by_code.get("635", 1120.0),
-                        "EBT": 7500.0,
-                        "Net_Income": ov_by_code.get("60", 6100.0),
-                        "OCF": ov_by_code.get("OCF", 10500.0),
-                    }
-                }
-                mock_ews = {
-                    2024: {
-                        "Z_Score": 4.18,
-                        "Z_Zone": "Safe",
-                        "M_Score": -2.92,
-                        "M_Zone": "Safe",
-                        "F_Score": 0.65,
-                        "F_Zone": "Safe",
-                        "ICR": 14.5,
-                        "Optimal_Debt_Cap": 0.50,
-                        "Actual_Debt_Ratio": 0.485,
-                        "ML_Prob": 0.08,
-                    }
-                }
-                mock_wc = {
-                    "dso": 42.5,
-                    "dsi": 24.1,
-                    "dpo": 36.8,
-                    "ccc": 29.8,
-                    "wctr": 12.2,
-                    "recommended_ku_tenor_months": 4,
-                }
-                mock_qual = {
-                    "total_qual_score": qual_score,
-                    "radar_data": c_breakdown_step5,
-                }
-                mock_underwriting = {
-                    "requested_limit_branch": proposed_limit * 1e9,
-                    "planned_sales": rev_plan * 1e9,
-                    "audit_trail_logs": st.session_state.bctc_override_data,
-                }
+                pdf_payload = build_step5_pdf_payload(
+                    bctc_override_data=st.session_state.bctc_override_data,
+                    qual_score=qual_score,
+                    c_breakdown=c_breakdown_step5,
+                    grade=grade,
+                    rec_ltv_pct=rec_ltv_pct,
+                    proposed_limit_bil=proposed_limit,
+                    rev_plan_bil=rev_plan,
+                    collateral_val_bil=collateral_val,
+                    evaluation_year=2024,
+                )
 
                 pdf_bytes = generate_full_credit_appraisal_pdf_bytes(
                     company_name=st.session_state.active_company["name"],
                     ticker=st.session_state.active_company["ticker"],
-                    extracted_data=mock_extracted,
-                    ews_results=mock_ews,
-                    wc_results=mock_wc,
-                    qual_results=mock_qual,
-                    underwriting_data=mock_underwriting,
+                    extracted_data=pdf_payload["extracted_data"],
+                    ews_results=pdf_payload["ews_results"],
+                    wc_results=pdf_payload["wc_results"],
+                    qual_results=pdf_payload["qual_results"],
+                    underwriting_data=pdf_payload["underwriting_data"],
                     evaluation_year=2024,
                     industry=st.session_state.active_company.get("industry", "Khác"),
                     audit_trail_logs=st.session_state.bctc_override_data,

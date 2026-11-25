@@ -11,6 +11,7 @@ Bổ sung các trụ cột nghiệp vụ thẩm định thực tế:
 5. Phân cấp Thẩm quyền Phê duyệt & Đối chiếu Khác biệt Chính sách (ĐVKD vs Khối Thẩm định)
 """
 
+import datetime
 import numpy as np
 import pandas as pd
 from typing import Dict, List, Any, Optional
@@ -64,10 +65,13 @@ def calculate_working_capital_need(
     cogs_ratio = (curr_cogs / curr_sales) if (curr_sales > 0 and curr_cogs > 0) else 0.82
     planned_cogs = planned_sales * cogs_ratio
     
-    # 2. Tính toán các chu kỳ hoạt động và vòng quay
-    dso = (curr_rec / curr_sales * 365.0) if curr_sales > 0 else 45.0
-    dsi = (curr_inv / curr_cogs * 365.0) if curr_cogs > 0 else 60.0
-    dpo = (curr_pay / curr_cogs * 365.0) if curr_cogs > 0 else 35.0
+    # 2. Tính toán các chu kỳ hoạt động và vòng quay (chống tràn số inf/NaN khi mẫu số tiệm cận 0)
+    dso = (curr_rec / curr_sales * 365.0) if curr_sales > 1e-6 else 45.0
+    dsi = (curr_inv / curr_cogs * 365.0) if curr_cogs > 1e-6 else 60.0
+    dpo = (curr_pay / curr_cogs * 365.0) if curr_cogs > 1e-6 else 35.0
+    dso = float(np.clip(dso, -3650.0, 3650.0)) if np.isfinite(dso) else 45.0
+    dsi = float(np.clip(dsi, -3650.0, 3650.0)) if np.isfinite(dsi) else 60.0
+    dpo = float(np.clip(dpo, -3650.0, 3650.0)) if np.isfinite(dpo) else 35.0
     operating_cycle = dso + dsi
     ccc = operating_cycle - dpo
     
