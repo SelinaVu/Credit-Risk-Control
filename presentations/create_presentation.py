@@ -771,7 +771,7 @@ def build_deck():
     p2.font.color.rgb = RGBColor(210, 225, 245)
 
     # Save presentation
-    output_pptx = "FinTrust_EWS_Bao_Cao_Hoi_Dong_Khoa_Hoc.pptx"
+    output_pptx = os.path.join(os.path.dirname(os.path.abspath(__file__)), "FinTrust_EWS_Bao_Cao_Hoi_Dong_Khoa_Hoc.pptx")
     prs.save(output_pptx)
     print(f"Presentation successfully updated and saved to: {output_pptx} (Total {len(prs.slides)} slides)")
 

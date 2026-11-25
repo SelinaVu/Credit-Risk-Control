@@ -39,7 +39,11 @@ def main():
     else:
         base_path = os.path.dirname(os.path.abspath(__file__))
         
-    app_path = os.path.join(base_path, "fintrust_app.py")
+    app_path = (
+        os.path.join(base_path, "fintrust_app.py")
+        if os.path.exists(os.path.join(base_path, "fintrust_app.py"))
+        else os.path.join(base_path, "..", "fintrust_app.py")
+    )
     
     # Thiết lập biến môi trường chứa thư mục gốc thực tế của file exe để fintrust_app.py lưu database cục bộ
     if hasattr(sys, 'frozen'):

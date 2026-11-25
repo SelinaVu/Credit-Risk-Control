@@ -22,7 +22,11 @@ import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CONFIG_FILE = os.path.join(BASE_DIR, "quarterly_scheduler_config.json")
 INDUSTRY_CONFIG_FILE = os.path.join(BASE_DIR, "industry_opt_lev.json")
-DEFAULT_PANEL_FILE = os.path.join(BASE_DIR, "BCTC_Tu_Dong_Vnstock.xlsx")
+DEFAULT_PANEL_FILE = (
+    os.path.join(BASE_DIR, "data", "BCTC_Tu_Dong_Vnstock.xlsx")
+    if os.path.exists(os.path.join(BASE_DIR, "data", "BCTC_Tu_Dong_Vnstock.xlsx"))
+    else os.path.join(BASE_DIR, "BCTC_Tu_Dong_Vnstock.xlsx")
+)
 
 DEFAULT_SCHEDULER_CONFIG = {
     "auto_update_enabled": True,

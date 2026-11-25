@@ -587,7 +587,8 @@ def generate_full_credit_appraisal_pdf_bytes(
     unconditional_prob: float = 0.0037,
     industry: str = "Sản xuất, chế biến, kinh doanh thực phẩm",
     ceo_age: int = 50,
-    is_bds: bool = False
+    is_bds: bool = False,
+    audit_trail_logs: list = None
 ) -> bytes:
     """
     Tạo tệp PDF Báo cáo Thẩm định Cấp Tín dụng Toàn diện Chuẩn Ngân hàng Thương mại (Full Bank Appraisal Memo).
@@ -1417,6 +1418,58 @@ def generate_full_credit_appraisal_pdf_bytes(
     story.append(Spacer(1, 8))
     
     story.append(Paragraph(f"<b>Kết luận Thẩm định:</b> Khách hàng hoạt động kinh doanh có hiệu quả, dòng tiền vận hành ổn định, đáp ứng điều kiện cấp tín dụng của Ngân hàng. Kính trình <b>{auth_info['approval_authority']}</b> xem xét phê duyệt Cấp hạn mức tín dụng <b>{risk_rec_limit/1e9:,.2f} tỷ đồng</b> theo đúng các điều kiện ràng buộc nêu trên.", body_style))
+    story.append(Spacer(1, 10))
+
+    # =========================================================================
+    # MỤC X: NHẬT KÝ KIỂM TOÁN SỐ LIỆU HIỆU CHỈNH THỦ CÔNG (AUDIT TRAIL LOG)
+    # =========================================================================
+    audit_logs = audit_trail_logs or (underwriting_data.get("audit_trail_logs") if underwriting_data else None) or []
+    active_overrides = [
+        r for r in audit_logs 
+        if abs(float(r.get("app_val", r.get("Số Áp Dụng (tỷ VNĐ)", 0.0))) - float(r.get("ocr_val", r.get("Số Gốc OCR (tỷ VNĐ)", 0.0)))) > 0.001
+    ] if audit_logs else []
+    
+    story.append(Paragraph("X. NHẬT KÝ KIỂM TOÁN SỐ LIỆU BCTC HIỆU CHỈNH THỦ CÔNG (AUDIT TRAIL LOG)", sec_title_style))
+    if active_overrides:
+        story.append(Paragraph("<b>CẢNH BÁO KIỂM SOÁT NỘI BỘ:</b> Hồ sơ thẩm định có chứa các chỉ tiêu BCTC được Cán bộ thẩm định điều chỉnh thủ công so với bản bóc tách OCR gốc. Chi tiết căn cứ và lý do giải trình:", sub_sec_style))
+        audit_headers = [
+            Paragraph("<b>Mã</b>", th_style),
+            Paragraph("<b>Khoản mục Kế toán</b>", th_left),
+            Paragraph("<b>Số Gốc OCR</b>", th_style),
+            Paragraph("<b>Số Áp Dụng</b>", th_style),
+            Paragraph("<b>Chênh Lệch</b>", th_style),
+            Paragraph("<b>Căn cứ & Lý do Giải trình (Remark)</b>", th_left)
+        ]
+        audit_rows = [audit_headers]
+        for r in active_overrides:
+            c_code = str(r.get("code", r.get("Mã Số", "")))
+            c_item = str(r.get("item", r.get("Khoản Mục Kế Toán", "")))
+            c_ocr = float(r.get("ocr_val", r.get("Số Gốc OCR (tỷ VNĐ)", 0.0)))
+            c_app = float(r.get("app_val", r.get("Số Áp Dụng (tỷ VNĐ)", 0.0)))
+            c_diff = c_app - c_ocr
+            c_rem = str(r.get("remark", r.get("Lý Do Điều Chỉnh (Remark)", "Chưa có ghi chú")))
+            audit_rows.append([
+                Paragraph(f"<b>{c_code}</b>", cell_center),
+                Paragraph(c_item, cell_style),
+                Paragraph(f"{c_ocr:,.1f} tỷ", cell_right),
+                Paragraph(f"<b>{c_app:,.1f} tỷ</b>", cell_right),
+                Paragraph(f"<b>{c_diff:+,.1f} tỷ</b>", cell_right),
+                Paragraph(c_rem, cell_style)
+            ])
+        t_audit = Table(audit_rows, colWidths=[35, 120, 65, 65, 65, 165])
+        t_audit.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#7C2D12")),
+            ('BOX', (0, 0), (-1, -1), 0.5, colors.HexColor("#EA580C")),
+            ('INNERGRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#FED7AA")),
+            ('TOPPADDING', (0, 0), (-1, -1), 2.5),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        story.append(t_audit)
+        story.append(Spacer(1, 4))
+        story.append(Paragraph("<i>(*) Cán bộ Thẩm định cam đoan chịu trách nhiệm toàn diện trước Hội đồng Tín dụng và Pháp luật về tính xác thực của các lý do giải trình hiệu chỉnh nêu trên.</i>", cell_style))
+    else:
+        story.append(Paragraph("<i>🟢 Báo cáo này sử dụng 100% số liệu gốc trích xuất trực tiếp từ BCTC kiểm toán, không có bất kỳ can thiệp hiệu chỉnh thủ công nào.</i>", body_style))
     story.append(Spacer(1, 15))
 
     # Khung Ký duyệt 3 Cấp

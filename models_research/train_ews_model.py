@@ -15,9 +15,21 @@ import joblib
 # -------------------------------------------------------------------------
 # CONSTANTS & PATHS
 # -------------------------------------------------------------------------
-EXCEL_PATH = "BCTC_Tu_Dong_Vnstock.xlsx"
-ARTIFACT_DIR = "/Users/tungnguyen/.gemini/antigravity/brain/874901a3-2634-40af-9b0d-5d01ef46a6cc"
-MODEL_PATH = "best_ews_model.joblib"
+_CURR_DIR = os.path.dirname(os.path.abspath(__file__))
+_DATA_DIR = os.path.join(_CURR_DIR, "..", "data")
+_ROOT_DIR = os.path.join(_CURR_DIR, "..")
+
+EXCEL_PATH = (
+    os.path.join(_DATA_DIR, "BCTC_Tu_Dong_Vnstock.xlsx")
+    if os.path.exists(os.path.join(_DATA_DIR, "BCTC_Tu_Dong_Vnstock.xlsx"))
+    else "BCTC_Tu_Dong_Vnstock.xlsx"
+)
+ARTIFACT_DIR = os.path.join(_ROOT_DIR, "docs")
+MODEL_PATH = (
+    os.path.join(_ROOT_DIR, "best_ews_model.joblib")
+    if os.path.exists(os.path.join(_ROOT_DIR, "best_ews_model.joblib"))
+    else "best_ews_model.joblib"
+)
 
 # -------------------------------------------------------------------------
 # 1. LOAD & PREPARE DATA

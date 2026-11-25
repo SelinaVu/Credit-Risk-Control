@@ -16,6 +16,10 @@ env/
 build/
 dist/
 *.spec
+packaging/build/
+packaging/dist/
+packaging/*.spec
+archives/
 
 # PDF, Word & temp documentation files
 *.pdf
@@ -23,19 +27,24 @@ dist/
 *.doc
 *.log
 screenlog.*
+docs/logs/
+docs/*.pdf
+docs/*.docx
 
 # Data & local storage
 storage/
-BCTC_Error_Reports/
-Error report/
-BCTC*
-Bank*
-Luan_van_Thac_si/
-Fintrust_EWS_Source/
-Fintrust_EWS_Browser/
-Fintrust_EWS_Docker/
-FinTrust_EWS_Update_Patch/
-financials_progress.csv
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+.env
+.streamlit/secrets.toml
+data/bctc_*
+data/BCTC*
+data/financials_progress.csv
+presentations/Error_Reports_Slides/
+presentations/Luan_van_Thac_si/
+presentations/Meeting_16_11/
 
 # macOS system files
 .DS_Store

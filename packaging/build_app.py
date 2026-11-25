@@ -6,7 +6,11 @@ def build():
     # Xác định thư mục hiện tại
     base_path = os.path.dirname(os.path.abspath(__file__))
     app_script = os.path.join(base_path, "desktop_wrapper.py")
-    streamlit_script = os.path.join(base_path, "fintrust_app.py")
+    streamlit_script = (
+        os.path.join(base_path, "fintrust_app.py")
+        if os.path.exists(os.path.join(base_path, "fintrust_app.py"))
+        else os.path.join(base_path, "..", "fintrust_app.py")
+    )
     
     # Định dạng dấu phân cách tài nguyên (; trên Windows, : trên macOS)
     separator = ";" if sys.platform == "win32" else ":"
