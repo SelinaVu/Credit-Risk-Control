@@ -164,3 +164,19 @@ def test_concurrent_multi_user_saves_no_sqlite_lock_crash(isolated_cloud_db, sam
     assert all(ok for ok, _ in results)
     saved = db_cloud.list_saved_companies()
     assert len(saved) == 8
+
+
+def test_supabase_auth_helpers_offline_and_validation(isolated_cloud_db):
+    """Kiểm tra helper xác thực Supabase Auth khi offline và validate đầu vào."""
+    db_cloud, _ = isolated_cloud_db
+    assert db_cloud.is_supabase_auth_active() is False
+    assert db_cloud.list_team_users() == []
+
+    ok, info, msg = db_cloud.authenticate_supabase_user("", "")
+    assert ok is False and info == {} and "Email" in msg
+
+    ok_pw, msg_pw = db_cloud.change_supabase_password("tok", "ref", "short")
+    assert ok_pw is False and "8" in msg_pw
+
+    ok_rst, msg_rst = db_cloud.send_supabase_password_reset("invalid-email")
+    assert ok_rst is False and "hợp lệ" in msg_rst

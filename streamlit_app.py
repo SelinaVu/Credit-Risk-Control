@@ -19,13 +19,18 @@ if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
 from src.core.database_cloud import (
+    authenticate_supabase_user,
+    change_supabase_password,
     export_profile_package_json,
     get_storage_status,
     get_team_passcode,
+    is_supabase_auth_active,
     list_saved_companies,
+    list_team_users,
     load_company_profile,
     parse_profile_package_json,
     save_company_profile,
+    send_supabase_password_reset,
 )
 from src.core.pdf_payload import build_step5_pdf_payload
 
@@ -185,16 +190,67 @@ st.markdown(
 )
 
 # -------------------------------------------------------------------------
-# CỔNG BẢO VỆ NHÓM (TEAM PASSCODE - KÍCH HOẠT KHI CÓ TRONG ST.SECRETS)
+# CỔNG ĐĂNG NHẬP: ƯU TIÊN SUPABASE AUTH (EMAIL + PASS RIÊNG), FALLBACK TEAM PASSCODE
 # -------------------------------------------------------------------------
+supabase_auth_mode = is_supabase_auth_active()
 required_passcode = get_team_passcode()
+
+if "auth_user" not in st.session_state:
+    st.session_state.auth_user = None
+
 if "team_authenticated" not in st.session_state:
-    st.session_state.team_authenticated = required_passcode is None
+    st.session_state.team_authenticated = (not supabase_auth_mode) and (required_passcode is None)
 
 if "operator_name" not in st.session_state:
     st.session_state.operator_name = "Cán bộ Thẩm định (Hội Sở)"
 
-if required_passcode and not st.session_state.team_authenticated:
+if supabase_auth_mode and st.session_state.auth_user is None:
+    _, col_login, _ = st.columns([1, 1.45, 1])
+    with col_login:
+        st.markdown(
+            """
+            <div class="fintrust-topbar" style="margin-top: 1.8rem;">
+                <div>
+                    <div class="fintrust-brand">🛡️ FINTRUST EWS Cloud</div>
+                    <div class="fintrust-subbrand">Đăng nhập Tài khoản Cá nhân — Đồng bộ Audit Trail Chuẩn Ngân Hàng</div>
+                </div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        with st.form("supabase_login_form", border=True):
+            email_input = st.text_input(
+                "Email công việc:",
+                value="",
+                placeholder="VD: selinagv.jp@gmail.com",
+            )
+            pw_input = st.text_input(
+                "Mật khẩu cá nhân:",
+                type="password",
+                placeholder="Nhập mật khẩu đã được Quản trị viên cấp",
+            )
+            submitted = st.form_submit_button("🔐 Đăng nhập Hệ Thống", type="primary", width="stretch")
+            if submitted:
+                ok_auth, user_info, auth_msg = authenticate_supabase_user(email_input, pw_input)
+                if ok_auth:
+                    st.session_state.auth_user = user_info
+                    st.session_state.team_authenticated = True
+                    st.session_state.operator_name = user_info["full_name"]
+                    st.rerun()
+                else:
+                    st.error(auth_msg)
+
+        with st.expander("📧 Quên mật khẩu? Gửi link đặt lại qua Email", expanded=False):
+            reset_email = st.text_input("Nhập Email tài khoản của bạn:", key="reset_pw_email_input")
+            if st.button("Gửi email đặt lại mật khẩu", width="stretch"):
+                ok_r, msg_r = send_supabase_password_reset(reset_email)
+                if ok_r:
+                    st.success(msg_r)
+                else:
+                    st.error(msg_r)
+    st.stop()
+
+elif (not supabase_auth_mode) and required_passcode and not st.session_state.team_authenticated:
     _, col_login, _ = st.columns([1, 1.4, 1])
     with col_login:
         st.markdown(
@@ -212,7 +268,7 @@ if required_passcode and not st.session_state.team_authenticated:
             op_input = st.text_input(
                 "Họ tên Cán bộ Thẩm định & Quốc gia (lưu vào Nhật ký Audit Trail):",
                 value="",
-                placeholder="VD: Nguyễn Tùng (VN) hoặc Selina (JP)",
+                placeholder="VD: Vu Quynh Giao hoặc Duong Dang Khoa",
             )
             pass_input = st.text_input(
                 "Mã truy cập nhóm (Team Passcode):",
@@ -384,12 +440,59 @@ with st.sidebar:
         st.info(f"💾 **{storage_status['label']}**")
         st.caption(storage_status["detail"])
 
-    # Định danh Cán bộ thẩm định để lưu vết Audit Trail đa quốc gia
-    st.session_state.operator_name = st.text_input(
-        "👤 Cán bộ Thẩm định (lưu vết Audit):",
-        value=st.session_state.operator_name,
-        help="Tên của bạn sẽ được tự động đính kèm vào từng dòng sửa số liệu BCTC trên Supabase Cloud và file PDF.",
-    ).strip() or "Cán bộ Thẩm định"
+    # Định danh Cán bộ thẩm định (khóa cứng theo tài khoản khi dùng Supabase Auth)
+    auth_user = st.session_state.get("auth_user")
+    if auth_user:
+        st.session_state.operator_name = auth_user["full_name"]
+        role_label = "👑 Quản trị viên (Admin)" if auth_user.get("role") == "admin" else "👤 Chuyên viên Thẩm định"
+        st.markdown(
+            f"""
+            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-left: 4px solid #1e3a8a; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px;">
+                <div style="font-size: 0.75rem; color: #1e3a8a; font-weight: 700;">{role_label}</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a;">{auth_user['full_name']}</div>
+                <div style="font-size: 0.75rem; color: #64748b;">{auth_user['email']}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        with st.expander("🔑 Đổi mật khẩu cá nhân", expanded=False):
+            new_pw1 = st.text_input("Mật khẩu mới (>= 8 ký tự):", type="password", key="chg_pw_1")
+            new_pw2 = st.text_input("Nhập lại mật khẩu mới:", type="password", key="chg_pw_2")
+            if st.button("Cập nhật mật khẩu", width="stretch", key="btn_chg_pw"):
+                if new_pw1 != new_pw2:
+                    st.error("Hai ô mật khẩu mới không khớp nhau.")
+                else:
+                    ok_pw, msg_pw = change_supabase_password(
+                        auth_user.get("access_token", ""),
+                        auth_user.get("refresh_token", ""),
+                        new_pw1,
+                    )
+                    if ok_pw:
+                        st.success(msg_pw)
+                    else:
+                        st.error(msg_pw)
+
+        if auth_user.get("role") == "admin":
+            with st.expander("👥 Quản trị Danh sách Nhóm", expanded=False):
+                roster = list_team_users()
+                if roster:
+                    for m in roster:
+                        tag = "👑 Admin" if m.get("role") == "admin" else "Member"
+                        st.markdown(f"- **{m['full_name']}** (`{tag}`)  \n  `{m['email']}`")
+                st.caption("Thêm/khóa tài khoản trực tiếp tại Supabase Dashboard → Authentication → Users.")
+
+        if st.button("🚪 Đăng xuất", width="stretch"):
+            st.session_state.auth_user = None
+            st.session_state.team_authenticated = False
+            st.session_state.profile_loaded = False
+            st.session_state.active_company = None
+            st.rerun()
+    else:
+        st.session_state.operator_name = st.text_input(
+            "👤 Cán bộ Thẩm định (lưu vết Audit):",
+            value=st.session_state.operator_name,
+            help="Tên của bạn sẽ được tự động đính kèm vào từng dòng sửa số liệu BCTC trên Supabase Cloud và file PDF.",
+        ).strip() or "Cán bộ Thẩm định"
 
     if st.session_state.profile_loaded and st.session_state.active_company:
         st.success(f"⚡ Đang mở: **{st.session_state.active_company['name']}**")
@@ -436,6 +539,13 @@ storage_badge_html = (
     else '<span style="font-size: 0.72rem; background: rgba(255,255,255,0.18); padding: 2px 8px; border-radius: 4px;">💾 Local SQLite</span>'
 )
 
+auth_user_top = st.session_state.get("auth_user")
+role_badge_top = (
+    '<span style="font-size: 0.7rem; background: #f59e0b; color: #0f172a; font-weight: 700; padding: 1px 6px; border-radius: 4px; margin-left: 6px;">ADMIN</span>'
+    if (auth_user_top and auth_user_top.get("role") == "admin")
+    else ""
+)
+
 st.markdown(
     f"""
 <div class="fintrust-topbar">
@@ -444,7 +554,7 @@ st.markdown(
         <div class="fintrust-subbrand">Hệ thống Cảnh báo Sớm Rủi ro & Thẩm định Cấp Tín dụng Doanh nghiệp Đa Quốc Gia</div>
     </div>
     <div style="text-align: right; font-size: 0.82rem;">
-        <div>👤 <strong>Cán bộ Thẩm định:</strong> {st.session_state.operator_name}</div>
+        <div>👤 <strong>Cán bộ Thẩm định:</strong> {st.session_state.operator_name}{role_badge_top}</div>
         <div style="color: #93c5fd;">Phòng Thẩm định & Phê duyệt Tín dụng | Hội Sở</div>
     </div>
 </div>

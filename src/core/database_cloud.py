@@ -539,6 +539,139 @@ def load_company_profile(ticker: str, year: int = 2024) -> Optional[Dict[str, An
 
 
 # ---------------------------------------------------------------------------
+# XÁC THỰC TÀI KHOẢN CÁ NHÂN (SUPABASE AUTH + BẢNG PHÂN QUYỀN TEAM_USERS)
+# ---------------------------------------------------------------------------
+def _create_fresh_auth_client() -> Optional[Client]:
+    """Tạo Supabase Client độc lập cho mỗi thao tác Auth để không chia sẻ JWT giữa các người dùng."""
+    url, key = _read_supabase_credentials()
+    if not url or not key or not HAS_SUPABASE_SDK or create_client is None:
+        return None
+    return create_client(url, key)
+
+
+def is_supabase_auth_active() -> bool:
+    """Trả về True khi Supabase đang kết nối và bảng danh sách nhân sự team_users đã sẵn sàng."""
+    client = get_supabase_client()
+    if client is None:
+        return False
+    try:
+        resp = client.table("team_users").select("email").limit(1).execute()
+        return resp.data is not None and len(resp.data) > 0
+    except Exception:
+        return False
+
+
+def list_team_users() -> List[Dict[str, Any]]:
+    """Lấy danh sách tài khoản nhân sự đã đăng ký từ bảng public.team_users."""
+    client = get_supabase_client()
+    if client is None:
+        return []
+    try:
+        resp = (
+            client.table("team_users")
+            .select("email, full_name, role, is_active")
+            .order("role", desc=False)
+            .order("full_name", desc=False)
+            .execute()
+        )
+        return resp.data or []
+    except Exception:
+        return []
+
+
+def authenticate_supabase_user(email: str, password: str) -> Tuple[bool, Dict[str, Any], str]:
+    """Đăng nhập bằng Email & Mật khẩu qua Supabase Auth, đồng thời khóa đúng họ tên & vai trò từ team_users."""
+    email_clean = str(email or "").strip().lower()
+    if not email_clean or not password:
+        return False, {}, "Vui lòng nhập đầy đủ Email và Mật khẩu."
+
+    auth_client = _create_fresh_auth_client()
+    if auth_client is None:
+        return False, {}, "Hệ thống chưa kết nối được máy chủ xác thực Supabase Cloud."
+
+    try:
+        res = auth_client.auth.sign_in_with_password({"email": email_clean, "password": password})
+        user = getattr(res, "user", None)
+        session = getattr(res, "session", None)
+        if user is None:
+            return False, {}, "Email hoặc mật khẩu chưa chính xác."
+
+        # Tra cứu thông tin chính thức (Họ tên cố định & Vai trò Admin/Member) từ public.team_users
+        full_name = ""
+        role = "member"
+        is_active = True
+        try:
+            lookup = (
+                auth_client.table("team_users")
+                .select("email, full_name, role, is_active")
+                .ilike("email", email_clean)
+                .limit(1)
+                .execute()
+            )
+            if lookup.data:
+                rec = lookup.data[0]
+                full_name = str(rec.get("full_name") or "").strip()
+                role = str(rec.get("role") or "member").strip().lower()
+                is_active = bool(rec.get("is_active", True))
+        except Exception:
+            pass
+
+        if not is_active:
+            return False, {}, "Tài khoản này đang tạm khóa. Vui lòng liên hệ Quản trị viên (Vu Quynh Giao)."
+
+        if not full_name:
+            meta = getattr(user, "user_metadata", None) or {}
+            full_name = str(meta.get("full_name") or email_clean.split("@")[0]).strip()
+
+        user_info = {
+            "email": email_clean,
+            "full_name": full_name,
+            "role": role,
+            "access_token": getattr(session, "access_token", "") if session else "",
+            "refresh_token": getattr(session, "refresh_token", "") if session else "",
+        }
+        return True, user_info, f"Chào mừng **{full_name}** đăng nhập hệ thống FinTrust EWS!"
+    except Exception:
+        return False, {}, "Email hoặc mật khẩu chưa chính xác. Vui lòng kiểm tra lại."
+
+
+def change_supabase_password(access_token: str, refresh_token: str, new_password: str) -> Tuple[bool, str]:
+    """Cho phép từng cán bộ tự đổi mật khẩu cá nhân ngay trên giao diện."""
+    if not new_password or len(new_password) < 8:
+        return False, "Mật khẩu mới phải có ít nhất 8 ký tự."
+    if not access_token or not refresh_token:
+        return False, "Phiên đăng nhập chưa đủ quyền đổi mật khẩu. Vui lòng đăng xuất và đăng nhập lại."
+
+    auth_client = _create_fresh_auth_client()
+    if auth_client is None:
+        return False, "Không kết nối được máy chủ Supabase Auth."
+
+    try:
+        auth_client.auth.set_session(access_token, refresh_token)
+        auth_client.auth.update_user({"password": new_password})
+        return True, "✅ Đã cập nhật mật khẩu mới thành công! Vui lòng dùng mật khẩu mới cho lần đăng nhập sau."
+    except Exception as exc:
+        return False, f"Không thể đổi mật khẩu: {exc}"
+
+
+def send_supabase_password_reset(email: str) -> Tuple[bool, str]:
+    """Gửi email đặt lại mật khẩu qua Supabase Auth."""
+    email_clean = str(email or "").strip().lower()
+    if not email_clean or "@" not in email_clean:
+        return False, "Vui lòng nhập địa chỉ email hợp lệ."
+
+    auth_client = _create_fresh_auth_client()
+    if auth_client is None:
+        return False, "Không kết nối được máy chủ Supabase Auth."
+
+    try:
+        auth_client.auth.reset_password_email(email_clean)
+        return True, f"📧 Đã gửi hướng dẫn đặt lại mật khẩu tới **{email_clean}** (vui lòng kiểm tra cả hộp thư Spam)."
+    except Exception as exc:
+        return False, f"Chưa gửi được email đặt lại mật khẩu (lưu ý giới hạn 2 email/giờ ở gói Free): {exc}"
+
+
+# ---------------------------------------------------------------------------
 # XUẤT / NHẬP GÓI HỒ SƠ JSON (BACKUP & CHIA SẺ QUA EMAIL/CHAT)
 # ---------------------------------------------------------------------------
 def export_profile_package_json(

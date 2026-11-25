@@ -87,3 +87,28 @@ CREATE POLICY "fintrust_team_all_appraisal_profiles"
     ON public.appraisal_profiles FOR ALL
     TO anon, authenticated
     USING (true) WITH CHECK (true);
+
+-- ============================================================================
+-- 5. Bảng Danh sách Nhân sự & Phân quyền (Admin / Member) gắn với Supabase Auth
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS public.team_users (
+    email TEXT PRIMARY KEY,
+    full_name TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'member',
+    is_active BOOLEAN NOT NULL DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.team_users ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "fintrust_team_users_select" ON public.team_users;
+CREATE POLICY "fintrust_team_users_select"
+    ON public.team_users FOR SELECT
+    TO anon, authenticated
+    USING (true);
+
+DROP POLICY IF EXISTS "fintrust_team_users_admin_write" ON public.team_users;
+CREATE POLICY "fintrust_team_users_admin_write"
+    ON public.team_users FOR ALL
+    TO authenticated
+    USING (true) WITH CHECK (true);
